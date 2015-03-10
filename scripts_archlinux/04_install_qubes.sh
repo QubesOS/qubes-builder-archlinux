@@ -3,11 +3,11 @@
 set -e
 
 echo "Mounting archlinux install system into mnt_archlinux_dvd..."
-mkdir -p mnt_archlinux_dvd
-mount $CACHEDIR/airootfs.img mnt_archlinux_dvd
+mkdir -p $CACHEDIR/mnt_archlinux_dvd
+mount $CACHEDIR/airootfs.img $CACHEDIR/mnt_archlinux_dvd
 
 echo "Fix bug intruduced in arch-chroot causing arguments not to be passed"
-sed "s/unshare --fork --pid//" -i mnt_archlinux_dvd/usr/bin/arch-chroot
+sed "s/unshare --fork --pid//" -i $CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot
 
 # Note: Enable x86 repos
 su -c "echo '[multilib]' >> $INSTALLDIR/etc/pacman.conf"
@@ -19,23 +19,23 @@ echo "--> Registering Qubes custom repository"
 cat >> $INSTALLDIR/etc/pacman.conf <<EOF
 [qubes] # QubesTMP
 SigLevel = Optional TrustAll # QubesTMP
-Server = file:///mnt/qubes-rpms-mirror-repo/pkgs # QubesTMP
+Server = file:///mnt/qubes-pkgs-mirror-repo/pkgs # QubesTMP
 EOF
 
-export CUSTOMREPO=$PWD/yum_repo_qubes/archlinux
-mkdir -p $INSTALLDIR/mnt/qubes-rpms-mirror-repo
-mount --bind $CUSTOMREPO $INSTALLDIR/mnt/qubes-rpms-mirror-repo
+export CUSTOMREPO="${PWD}/pkgs-for-template/${DIST}"
+mkdir -p $INSTALLDIR/mnt/qubes-pkgs-mirror-repo
+mount --bind $CUSTOMREPO $INSTALLDIR/mnt/qubes-pkgs-mirror-repo
 
-./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "cd /mnt/qubes-rpms-mirror-repo/;repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz"
+$CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "cd /mnt/qubes-pkgs-mirror-repo/;repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz"
 
 chown -R --reference=$CUSTOMREPO $CUSTOMREPO
 
-./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -Sy"
+$CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -Sy"
 
 echo "--> Installing qubes-packages..."
-./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -S --noconfirm qubes-vm-xen"
-./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -S --noconfirm qubes-vm-core"
-./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -S --noconfirm qubes-vm-gui"
+$CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -S --noconfirm qubes-vm-xen"
+$CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -S --noconfirm qubes-vm-core"
+$CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -S --noconfirm qubes-vm-gui"
 
 echo "--> Updating template fstab file..."
 cat >> $INSTALLDIR/etc/fstab <<EOF
@@ -52,7 +52,7 @@ ln -s /dev/null $INSTALLDIR/etc/udev/rules.d/80-net-name-slot.rules
 ln -s /etc/sysconfig/i18n $INSTALLDIR/etc/locale.conf
 # Enable some locales (incl. UTF-8
 sed 's/#en_US/en_US/g' -i $INSTALLDIR/etc/locale.gen
-./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "locale-gen"
+$CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "locale-gen"
 
 # Creating a random file in /lib/modules to ensure that the directory in never deleted when packages are removed
 mkdir -p $INSTALLDIR/lib/modules
@@ -73,5 +73,5 @@ Server = http://olivier.medoc.free.fr/archlinux/pkgs/
 EOF
 
 echo "--> Cleaning up..."
-umount $INSTALLDIR/mnt/qubes-rpms-mirror-repo
-umount mnt_archlinux_dvd
+umount $INSTALLDIR/mnt/qubes-pkgs-mirror-repo
+umount $CACHEDIR/mnt_archlinux_dvd

@@ -19,19 +19,18 @@ if ! [ -d $DIR/home/user ]; then
     INITIAL=1
     mkdir -p $DIR
 
-    mkdir -p mnt_archlinux_dvd
-    export CACHEDIR=qubes-src/linux-template-builder/cache_archlinux/
+    mkdir -p $CACHEDIR/mnt_archlinux_dvd
     export INSTALLDIR=$DIR
-    export SCRIPTSDIR=qubes-src/linux-template-builder/scripts_archlinux/
+    export SCRIPTSDIR=${ARCHLINUX_PLUGIN_DIR}scripts_archlinux/
 
-    qubes-src/linux-template-builder/scripts_archlinux/00_prepare.sh
+    ${SCRIPTSDIR}/00_prepare.sh
 
-    qubes-src/linux-template-builder/scripts_archlinux/01_install_core.sh
+    ${SCRIPTSDIR}/01_install_core.sh
 
-    sudo mount $CACHEDIR/airootfs.img mnt_archlinux_dvd
+    sudo mount $CACHEDIR/airootfs.img $CACHEDIR/mnt_archlinux_dvd
 
     echo "Fix bug intruduced in arch-chroot causing arguments not to be passed"
-    sed "s/unshare --fork --pid//" -i mnt_archlinux_dvd/usr/bin/arch-chroot
+    sed "s/unshare --fork --pid//" -i $CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot
 
     cp /etc/resolv.conf $DIR/etc/
 
@@ -48,9 +47,9 @@ if ! [ -d $DIR/home/user ]; then
     chroot $DIR sh -c "useradd -g user -G wheel $USER_OPTS -m user;su -c 'mkdir qubes-src' - user"
 
     # Install required makepkg dependencies
-    sudo ./mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -Sy --needed --noconfirm --asdeps binutils fakeroot sudo" 
+    sudo $CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "pacman -Sy --needed --noconfirm --asdeps binutils fakeroot sudo" 
 
-    sudo umount mnt_archlinux_dvd
+    sudo umount $CACHEDIR/mnt_archlinux_dvd
 
     # Fixup so that the user can sudo without password
     sudo sh -c "echo '%wheel ALL=(ALL) NOPASSWD: ALL' >> $INSTALLDIR/etc/sudoers.d/qubes-build-user"
@@ -66,7 +65,7 @@ EOF
     sudo tee -a $INSTALLDIR/etc/pacman.conf <<EOF
 [qubes]
 SigLevel = Optional TrustAll
-Server = file:///tmp/qubes-rpms-mirror-repo/pkgs
+Server = file:///tmp/qubes-pkgs-mirror-repo/pkgs
 EOF
 
 fi

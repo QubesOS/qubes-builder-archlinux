@@ -63,14 +63,15 @@ dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 		sudo mount --bind /dev/pts $(CHROOT_DIR)/dev/pts;\
 		sudo mount --bind /sys $(CHROOT_DIR)/sys;\
 	fi
-	@if ! [ -d $(CHROOT_DIR)/tmp/qubes-rpms-mirror-repo/pkgs ]; then\
-		mkdir -p $(CHROOT_DIR)/tmp/qubes-rpms-mirror-repo;\
-		sudo mount --bind $(BUILDER_REPO_DIR) $(CHROOT_DIR)/tmp/qubes-rpms-mirror-repo;\
+	mkdir -p $(BUILDER_REPO_DIR)/pkgs
+	@if ! [ -d $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo/pkgs ]; then\
+		mkdir -p $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo;\
+		sudo mount --bind $(BUILDER_REPO_DIR) $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo;\
 	fi
 
 $(CHROOT_DIR)/home/user/.prepared_base:
 	@echo "-> Preparing $(DIST) build environment"
-	@sudo -E ./prepare-chroot-archlinux $(CHROOT_DIR) $(DIST) || exit 1
+	@sudo -E $(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-archlinux $(CHROOT_DIR) $(DIST) || exit 1
 	@touch $(CHROOT_DIR)/home/user/.prepared_base
 	
 dist-prep:
@@ -85,7 +86,7 @@ endif
 	if [ ! -e "$(BUILDER_REPO_DIR)/pkgs/qubes.db" ]; then \
 		sudo cp $(CHROOT_DIR)/var/cache/pacman/pkg/pacman*.pkg.tar.xz "$(BUILDER_REPO_DIR)/pkgs/"; \
 	fi
-	sudo chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-rpms-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
+	sudo chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
 	sudo chroot $(CHROOT_DIR) sh -c 'pacman -Syu --noconfirm'
 
 
