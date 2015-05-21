@@ -2,46 +2,8 @@
 #
 # For "API" documentation check Makefile.generic
 #
-# Variables used as "parameters":
-#  DIST
-#  SRC_DIR
-#  COMPONENT
-#  PACKAGE_SET (currently "dom0" or "vm")
-
-### Load component-specific settings
-
-# Component specific settins. Generic variables:
-#  SOURCE_PREP - make target to run at "prep" stage
-#  SOURCE_COPY_IN - make target to run after "copy-in" stage
-#  SOURCE_COPY_OUT - make target to run after "copy-out" stage
-# Above are mainly to extend Makefile with some component-specific actions
-# (like handling additional sources)
-#
-#
-# Check Makefile.DISTRIBUTION for distribution-specific supported variables
-
-### Load distro-specific settings
-
-# This file should define:
-# 1. variables:
-#   PACKAGE_LIST - list of packages to build. Targets 'build-dep', 'package' and 'copy-out'
-#     will be run for each word on the list, with PACKAGE set to current word
-#   DIST_BUILD_DIR - basedir for sources inside of chroot - relative to
-#     CHROOT_DIR (qubes-src will be created in this directory)
-# targets:
-#   dist-prepare-chroot - initial preparation of chroot environment
-#   dist-prep - some preparation of sources (if needed)
-#   dist-build-dep - install build dependencies (should operate on chroot directory)
-#   dist-package - compile package (should operate on chroot directory)
-#   dist-copy-out - copy compiled package out of chroot env; this target should
-#     move packages to ORIG_SRC (distro-specific subdir) and hardlink them to
-#     BUILDER_REPO_DIR
-#
-#   dist-build-dep, dist-package and dist-copy-out targets are run in separate
-#   process with stdout+stderr redirected to log file. If you want to print
-#   some message, use 3-rd file descriptor
-#
-# This file can specify additional targets (like update-repo-*)
+# Variables supposed to be in component's Makefile.builder:
+#  ARCH_BUILD_DIRS - list of archlinux directories containing build sripts (PKGFILES...)
 
 
 ### Variables required Makefile.generic
@@ -53,6 +15,8 @@ DIST_BUILD_DIR = /home/user
 RUN_AS_USER = user
 PKGS_DIR = pkgs/
 
+# Use += to allow Makefile.builder define some initial value
+MAKEPKG_BUILD_VARIABLES += ""
 
 ### Targets required by Makefile.generic to build packages
 dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
@@ -86,8 +50,8 @@ endif
 	if [ ! -e "$(BUILDER_REPO_DIR)/pkgs/qubes.db" ]; then \
 		sudo cp $(CHROOT_DIR)/var/cache/pacman/pkg/pacman*.pkg.tar.xz "$(BUILDER_REPO_DIR)/pkgs/"; \
 	fi
-	sudo chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
-	sudo chroot $(CHROOT_DIR) sh -c 'pacman -Syu --noconfirm'
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'pacman -Syu --noconfirm'
 
 
 dist-package:
@@ -96,7 +60,7 @@ ifndef PACKAGE
 endif
 #	rm -rf $(CHROOT_DIR)/$(DIST_SRC)/rpm/*
 	echo "Building package in $(DIST_SRC)"
-	sudo chroot $(CHROOT_DIR) su user -c 'cd $(DIST_SRC);cp $(PACKAGE)/PKGBUILD* .;makepkg --syncdeps --noconfirm --skipinteg'
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd $(DIST_SRC);cp $(PACKAGE)/PKGBUILD* .;makepkg --syncdeps --noconfirm --skipinteg'
 
 
 dist-copy-out:
