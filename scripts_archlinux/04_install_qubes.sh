@@ -49,7 +49,7 @@ echo "--> Configuring system to our preferences"
 # Name network devices using simple names (ethX)
 ln -s /dev/null $INSTALLDIR/etc/udev/rules.d/80-net-name-slot.rules
 # Initialize encoding to qubes standards
-ln -s /etc/sysconfig/i18n $INSTALLDIR/etc/locale.conf
+#ln -s /etc/sysconfig/i18n $INSTALLDIR/etc/locale.conf
 # Enable some locales (incl. UTF-8
 sed 's/#en_US/en_US/g' -i $INSTALLDIR/etc/locale.gen
 $CACHEDIR/mnt_archlinux_dvd/usr/bin/arch-chroot $INSTALLDIR sh -c "locale-gen"
