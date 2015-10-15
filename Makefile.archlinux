@@ -55,6 +55,10 @@ endif
 	# Ensure that pacman does not check for disk free space because it does not works in chroots
 	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'sed "s/^CheckSpace/#CheckSpace/g" -i /etc/pacman.conf'
 	
+	# Update archlinux keyring first so that Archlinux can be updated even after a long time
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'pacman -Sy --noconfirm archlinux-keyring'
+	
+	# Now update system
 	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'pacman -Syu --noconfirm'
 
 
