@@ -51,6 +51,10 @@ endif
 		sudo cp $(CHROOT_DIR)/var/cache/pacman/pkg/pacman*.pkg.tar.xz "$(BUILDER_REPO_DIR)/pkgs/"; \
 	fi
 	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
+	
+	# Ensure that pacman does not check for disk free space because it does not works in chroots
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'sed "s/^CheckSpace/#CheckSpace/g" -i /etc/pacman.conf'
+	
 	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'pacman -Syu --noconfirm'
 
 
