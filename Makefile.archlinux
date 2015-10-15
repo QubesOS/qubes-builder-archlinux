@@ -50,6 +50,11 @@ endif
 	if [ ! -e "$(BUILDER_REPO_DIR)/pkgs/qubes.db" ]; then \
 		sudo cp $(CHROOT_DIR)/var/cache/pacman/pkg/pacman*.pkg.tar.xz "$(BUILDER_REPO_DIR)/pkgs/"; \
 	fi
+	
+	# Remove local qubes packages signatures because pacman will only trust these local packages if no signature is provided
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo/pkgs; if [ -n "`ls *.asc`" ] ; then rm *.asc ; fi'
+
+	# Generate custom repository metadata based on packages that are available in qubes-pkgs-mirror-repo
 	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
 	
 	# Ensure that pacman does not check for disk free space because it does not works in chroots
