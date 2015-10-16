@@ -32,6 +32,9 @@ dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 		mkdir -p $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo;\
 		sudo mount --bind $(BUILDER_REPO_DIR) $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo;\
 	fi
+	
+	# Synchronize resolve.conf so that the chroot can resolve hostnames even if it changed
+	sudo cp /etc/resolv.conf $(CHROOT_DIR)/etc/resolv.conf
 
 $(CHROOT_DIR)/home/user/.prepared_base:
 	@echo "-> Preparing $(DIST) build environment"
