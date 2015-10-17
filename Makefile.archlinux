@@ -112,4 +112,18 @@ else
 
 endif
 
+# Sign packages
+sign:
+ifeq (,$(ARCH_BUILD_DIRS))
+	@true
+else
+	cd $(ORIG_SRC)
+	for filename in pkgs/*.pkg.tar.xz ; do
+		# if ! [ -f "$filename" ] ; then
+		# Replace package signature in case it has changed
+		gpg --detatch-sign "$filename"
+	done
+endif
+
+
 
