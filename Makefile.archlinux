@@ -55,7 +55,7 @@ endif
 	fi
 	
 	# Remove local qubes packages signatures because pacman will only trust these local packages if no signature is provided
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo/pkgs; if [ -n "`ls *.asc`" ] ; then rm *.asc ; fi'
+	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo/pkgs; if [ -n "`ls *.sig`" ] ; then rm *.sig ; fi'
 
 	# Generate custom repository metadata based on packages that are available in qubes-pkgs-mirror-repo
 	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
