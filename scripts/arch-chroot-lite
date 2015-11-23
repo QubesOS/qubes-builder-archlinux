@@ -1,0 +1,82 @@
+#!/bin/bash
+###
+### A stripped-down version of the 'arch-chroot' script bundled with Archlinux
+###
+### This version drops unused code and makes a fey key modifications,
+### annotated where they occur below.
+###
+
+shopt -s extglob
+
+die() { error "$@"; exit 1; }
+
+chroot_add_mount() {
+    mount "$@" && CHROOT_ACTIVE_MOUNTS=("$2" "${CHROOT_ACTIVE_MOUNTS[@]}")
+}
+
+chroot_setup() {
+    CHROOT_ACTIVE_MOUNTS=()
+    [[ $(trap -p EXIT) ]] && die '(BUG): attempting to overwrite existing EXIT trap'
+    trap 'chroot_teardown' EXIT
+
+    # arch-chroot-lite drops the conditional bind mount on the chroot path, as
+    # it seemed to shadow mounts set up before arch-chroot was invoked
+
+    chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
+    chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
+    # arch-chroot-lite will never have occasion to use efivars, so don't bother
+    # mounting efivarfs here
+    chroot_add_mount udev "$1/dev" -t devtmpfs -o mode=0755,nosuid &&
+    chroot_add_mount devpts "$1/dev/pts" -t devpts -o mode=0620,gid=5,nosuid,noexec &&
+    chroot_add_mount shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev &&
+    chroot_add_mount run "$1/run" -t tmpfs -o nosuid,nodev,mode=0755 &&
+    chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid
+    if [[ -d "$PACMAN_CACHE_DIR" ]]; then
+        PACMAN_CACHE_MOUNT_DIR="${PACMAN_CACHE_MOUNT_DIR:-$1/var/cache/pacman}"
+        mkdir -p "$PACMAN_CACHE_MOUNT_DIR"
+        # Cached qubes packages may be from old runs and throw checksum errors
+        rm "$PACMAN_CACHE_DIR/pkg"/qubes-vm-*.pkg.tar.xz 2>/dev/null || true
+        chroot_add_mount "$PACMAN_CACHE_DIR" "$PACMAN_CACHE_MOUNT_DIR" --bind
+    fi
+    if [[ -d "$PACMAN_CUSTOM_REPO_DIR" ]]; then
+        mkdir -p "$1/tmp/qubes-packages-mirror-repo"
+        chroot_add_mount "$PACMAN_CUSTOM_REPO_DIR" "$1/tmp/qubes-packages-mirror-repo" --bind
+    fi
+}
+
+chroot_teardown() {
+    # arch-chroot-lite kills gpg-agent, started by pacman-key, which otherwise
+    # keeps the mounts busy and prevents unmounting
+    pkill gpg-agent
+    umount "${CHROOT_ACTIVE_MOUNTS[@]}"
+    unset CHROOT_ACTIVE_MOUNTS
+}
+
+
+usage() {
+    cat <<EOF
+usage: ${0##*/} chroot-dir [command]
+
+    -h             Print this help message
+
+If 'command' is unspecified, ${0##*/} will launch /bin/sh.
+
+EOF
+}
+
+if [[ -z $1 || $1 = @(-h|--help) ]]; then
+    usage
+    exit $(( $# ? 0 : 1 ))
+fi
+
+(( EUID == 0 )) || die 'This script must be run with root privileges'
+chrootdir=$1
+shift
+
+[[ -d $chrootdir ]] || die "Can't create chroot on non-directory %s" "$chrootdir"
+
+chroot_setup "$chrootdir" || die "failed to setup chroot %s" "$chrootdir"
+# arch-schroot-lite already has /etc/resolv.conf managed by the builder
+# scripts, so no need to bind to the host system's resolv.conf here
+
+SHELL=/bin/sh unshare --fork --pid chroot "$chrootdir" "$@"

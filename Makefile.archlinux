@@ -1,85 +1,134 @@
-# Generic makefile for Fedora packages build
+# Makefile for Archlinux packages build
 #
 # For "API" documentation check Makefile.generic
 #
 # Variables supposed to be in component's Makefile.builder:
 #  ARCH_BUILD_DIRS - list of archlinux directories containing build sripts (PKGFILES...)
 
-
-### Variables required Makefile.generic
-# Use spec files list as PACKAGE_LIST
+### Variables required as per Makefile.generic:
+#
+#   PACKAGE_LIST - list of packages to build. Targets 'build-dep', 'package' and 'copy-out'
+#     will be run for each word on the list, with PACKAGE set to current word
+#   DIST_BUILD_DIR - basedir for sources inside of chroot - relative to
+#     CHROOT_DIR (qubes-src will be created in this directory)
+#
 PACKAGE_LIST = $(ARCH_BUILD_DIRS)
 DIST_BUILD_DIR = /home/user
 
 ### Local variables
 RUN_AS_USER = user
-PKGS_DIR = pkgs/
 
-# Use += to allow Makefile.builder define some initial value
-MAKEPKG_BUILD_VARIABLES += ""
+PACMAN_MIRROR ?= mirror.rackspace.com
 
-### Targets required by Makefile.generic to build packages
+
+DEBUG ?= 0
+ifneq ($(DEBUG),0)
+  $(info ╔══ DEBUG ══════════════════════════════════════════════════════════════════════)
+  $(info ║ Repo Variables)
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ SRC_DIR:               $(SRC_DIR))                # qubes-src
+  $(info ║ CHROOT_DIR:            $(CHROOT_DIR))             # /home/user/qubes-builder/chroot-jessie
+  $(info ║ BUILDER_REPO_DIR:      $(BUILDER_REPO_DIR))       # /home/user/qubes-builder/qubes-packages-mirror-repo/jessie
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ Chroot Variables)
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ CHROOT_DIR:            $(CHROOT_DIR))             #
+  $(info ║ DIST_BUILD_DIR:        $(DIST_BUILD_DIR))         # /home/user
+  $(info ║ DIST_SRC:              $(DIST_SRC))               # /home/user/qubes-src/repo
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ Build Variables)
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ ARCHLINUX_PLUGIN_DIR:  $(ARCHLINUX_PLUGIN_DIR))   # /home/user/qubes-builder/qubes-src/builder-archlinux
+  $(info ║ CACHEDIR:              $(CACHEDIR))               # cache/archlinux
+  $(info ║ PACKAGE_LIST:          $(PACKAGE_LIST))           # archlinux
+  $(info ║ DISTRIBUTION:          $(DISTRIBUTION))           # archlinux
+  $(info ║ DIST:                  $(DIST))                   #
+  $(info ║ COMPONENT:             $(COMPONENT))              #
+  $(info ║ PACKAGE_SET:           $(PACKAGE_SET))            # vm
+  $(info ║ CHROOT_ENV:            $(CHROOT_ENV))             # BACKEND_VMM=xen
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ Repository Variables)
+  $(info ╠───────────────────────────────────────────────────────────────────────────────)
+  $(info ║ UPDATE_REPO:           $(UPDATE_REPO))            #
+  $(info ║ REPO_PROXY:            $(REPO_PROXY))             #
+  $(info ║ ARCHLINUX_SRC_PREFIX:  $(ARCHLINUX_SRC_PREFIX))   # http://mirrors.kernel.org/archlinux
+  $(info ║ ARCHLINUX_REL_VERSION: $(ARCHLINUX_REL_VERSION))  #
+  $(info ║ PACMAN_MIRROR:         $(PACMAN_MIRROR))          # mirror.rackspace.com
+  $(info ╚═══════════════════════════════════════════════════════════════════════════════)
+endif
+
+### Targets required by Makefile.generic to build packages:
+
+# dist-prepare-chroot - initial preparation of chroot environment
+#   Specifically, load mounts for the build chroot
 dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
-	# Need pts, dev, and sys for pgp initialization things
-	@if [ ! -r $(CHROOT_DIR)/proc/cpuinfo ]; then\
-		sudo mount -t proc proc $(CHROOT_DIR)/proc;\
-		sudo mount --bind /dev $(CHROOT_DIR)/dev;\
-		sudo mount --bind /dev/pts $(CHROOT_DIR)/dev/pts;\
-		sudo mount --bind /sys $(CHROOT_DIR)/sys;\
+	@echo "--> Archlinux dist-prepare-chroot (makefile):"
+	@echo "  --> Checking mounting of dev/proc/sys on build chroot..."
+	@if [ ! -r "$(CHROOT_DIR)/proc/cpuinfo" ]; then\
+		echo "    --> sudo mount -t proc proc $(CHROOT_DIR)/proc;";\
+		sudo mount -t proc proc "$(CHROOT_DIR)/proc";\
 	fi
-	mkdir -p $(BUILDER_REPO_DIR)/pkgs
-	@if ! [ -d $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo/pkgs ]; then\
-		mkdir -p $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo;\
-		sudo mount --bind $(BUILDER_REPO_DIR) $(CHROOT_DIR)/tmp/qubes-pkgs-mirror-repo;\
+	@if [ ! -r "$(CHROOT_DIR)/dev/zero" ]; then\
+		echo "    --> sudo mount --bind /dev $(CHROOT_DIR)/dev;";\
+		sudo mount --bind /dev "$(CHROOT_DIR)/dev";\
+	fi
+	@if [ ! -r "$(CHROOT_DIR)/dev/pts/0" ]; then\
+		echo "    --> sudo mount --bind /dev/pts $(CHROOT_DIR)/dev/pts;";\
+		sudo mount --bind /dev/pts "$(CHROOT_DIR)/dev/pts";\
+	fi
+	@if [ ! -d "$(CHROOT_DIR)/sys/dev" ]; then\
+		echo "    --> sudo mount --bind /sys $(CHROOT_DIR)/sys;";\
+		sudo mount --bind /sys "$(CHROOT_DIR)/sys";\
+	fi
+	@sudo mkdir -p "$(CACHEDIR)/pacman_cache/pkg"
+	@sudo touch "$(CACHEDIR)/pacman_cache/pkg/.mnt"
+	@# qubes pkgs may be from old runs and no longer match the repo hashes
+	@sudo rm "$(CACHEDIR)/pacman_cache/pkg"/qubes-*.pkg.tar.xz 2>/dev/null || true
+	@if ! [ -r "$(CHROOT_DIR)/var/cache/pacman/pkg/.mnt" ]; then\
+		echo "    --> sudo mount --bind "$(CACHEDIR)/pacman_cache" "$(CHROOT_DIR)/var/cache/pacman";"; \
+		mkdir -p "$(CHROOT_DIR)/var/cache/pacman";\
+		sudo mount --bind "$(CACHEDIR)/pacman_cache" "$(CHROOT_DIR)/var/cache/pacman";\
+	fi
+	@mkdir -p "$(BUILDER_REPO_DIR)/pkgs"
+	@if ! [ -d "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo/pkgs" ]; then\
+		echo "    --> sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-deb";"; \
+		mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
+		sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
 	fi
 	
-	# Synchronize resolve.conf so that the chroot can resolve hostnames even if it changed
-	sudo cp /etc/resolv.conf $(CHROOT_DIR)/etc/resolv.conf
+	@echo "  --> Synchronize resolv.conf, in case it changed since last run..."
+	@sudo cp /etc/resolv.conf "$(CHROOT_DIR)/etc/resolv.conf"
 
-$(CHROOT_DIR)/home/user/.prepared_base:
-	@echo "-> Preparing $(DIST) build environment"
-	@sudo -E $(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-archlinux $(CHROOT_DIR) $(DIST) || exit 1
-	@touch $(CHROOT_DIR)/home/user/.prepared_base
-	
+# Create the build chroot, if it does not already exist
+$(CHROOT_DIR)/home/user/.prepared_base: $(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-builder
+	@echo "--> Archlinux preparing build chroot environment"
+	@sudo -E "$(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-builder" "$(CHROOT_DIR)" $(DIST) || exit 1
+	@touch "$(CHROOT_DIR)/home/user/.prepared_base"
+
+# dist-prep - some preparation of sources (if needed)
 dist-prep:
 	@true
 
+# dist-build-dep - install build dependencies (should operate on chroot directory)
 dist-build-dep:
-ifndef PACKAGE
-	$(error "PACKAGE need to be set!")
-endif
-	# Add all available package to the custom repository.
-	# Or initialize it with a random packages because pacman does not deal correctly with empty repositories
-	if [ ! -e "$(BUILDER_REPO_DIR)/pkgs/qubes.db" ]; then \
-		sudo cp $(CHROOT_DIR)/var/cache/pacman/pkg/pacman*.pkg.tar.xz "$(BUILDER_REPO_DIR)/pkgs/"; \
-	fi
-	
-	# Remove local qubes packages signatures because pacman will only trust these local packages if no signature is provided
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo/pkgs; if [ -n "`ls *.sig`" ] ; then rm *.sig ; fi'
+	@echo "--> Archlinux dist-build-dep (makefile)"
+	@sudo -E "$(ARCHLINUX_PLUGIN_DIR)/update-local-repo.sh" $(DIST)
 
-	# Generate custom repository metadata based on packages that are available in qubes-pkgs-mirror-repo
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd /tmp/qubes-pkgs-mirror-repo; repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
-	
-	# Ensure that pacman does not check for disk free space because it does not works in chroots
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'sed "s/^CheckSpace/#CheckSpace/g" -i /etc/pacman.conf'
-	
-	# Update archlinux keyring first so that Archlinux can be updated even after a long time
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'pacman -Sy --noconfirm archlinux-keyring'
-	
-	# Now update system
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) sh -c 'pacman -Syu --noconfirm'
-
-
+# dist-package - compile package (should operate on chroot directory)
+# TODO: makepkg doesn't seem to honor $http_proxy
 dist-package:
+	@echo "--> Archlinux dist-package (makefile)"
 ifndef PACKAGE
 	$(error "PACKAGE need to be set!")
 endif
-#	rm -rf $(CHROOT_DIR)/$(DIST_SRC)/rpm/*
-	echo "Building package in $(DIST_SRC)"
-	sudo $(CHROOT_ENV) chroot $(CHROOT_DIR) su user -c 'cd $(DIST_SRC);cp $(PACKAGE)/PKGBUILD* .;makepkg --syncdeps --noconfirm --skipinteg'
+	@echo "  --> Building package in $(DIST_SRC)"
+	sudo $(CHROOT_ENV) chroot "$(CHROOT_DIR)" su user -c 'cd "$(DIST_SRC)" && cp $(PACKAGE)/PKGBUILD* ./ && env http_proxy="$(REPO_PROXY)" makepkg --syncdeps --noconfirm --skipinteg'
 
-
+# dist-copy-out - copy compiled package out of chroot env; this target should
+#     move packages to ORIG_SRC (distro-specific subdir) and hardlink them to
+#     BUILDER_REPO_DIR
 dist-copy-out:
+	@echo "--> Archlinux dist-copy-out (makefile)"
 	@echo "--> Done:" >&3
 	@set -e;\
 	for arch_chroot_dir in $(CHROOT_DIR)/$(DIST_SRC)/; do\
@@ -124,6 +173,4 @@ else
 		gpg --detatch-sign "$filename"
 	done
 endif
-
-
 

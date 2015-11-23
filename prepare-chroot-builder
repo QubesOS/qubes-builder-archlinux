@@ -1,0 +1,69 @@
+#!/bin/sh
+# vim: set ts=4 sw=4 sts=4 et :
+
+### prepare-chroot-builder : Create the build chroot instance of Archlinux
+### (in which to build Qubes packages)
+echo "--> Archlinux prepare-chroot-builder"
+
+PLUGIN_DIR="$(dirname $0)"
+INSTALLDIR="$1"
+DISTRO="$2"
+
+SCRIPTSDIR=${ARCHLINUX_PLUGIN_DIR}scripts
+export INSTALLDIR SCRIPTSDIR
+
+PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
+export PACMAN_CACHE_DIR
+
+set -e
+[ "$VERBOSE" -ge 1 -o "$DEBUG" -gt 0 ] && echo "  --> INSTALLDIR: '$INSTALLDIR'"
+[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
+
+# /home/user will exist if we've completed the build previously
+if ! [ -d "${INSTALLDIR}/home/user" ]; then
+    # It's non-existance means this is likely the initial run, so build it
+
+    mkdir -p "$INSTALLDIR"
+
+    echo "  --> Installing archlinux build root:"
+    "${PLUGIN_DIR}/prepare-chroot-base" "$INSTALLDIR" "$DISTRO"
+
+    echo "  --> Configure system accounts..."
+    [ -n "$SUDO_UID" ] && USER_OPTS="-u ${SUDO_UID}"
+    [ -n "$USER_UID" ] && USER_OPTS="-u ${USER_UID}"
+    if [ -n "$USER_GID" ]; then
+        chroot "$INSTALLDIR" /bin/groupadd -g "$USER_GID" user
+    elif [ -n "$SUDO_GID" ]; then
+        chroot "$INSTALLDIR" /bin/groupadd -g "$SUDO_GID" user
+    else
+        chroot "$INSTALLDIR" /bin/groupadd user
+    fi
+    chroot "$INSTALLDIR" /bin/sh -c \
+        "useradd -g user -G wheel $USER_OPTS -m user; su -c 'mkdir qubes-src' - user"
+
+    echo "  --> Synchronize resolv.conf..."
+    cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
+
+    echo "  --> Installing required makepkg dependencies..."
+    pkgs="binutils fakeroot sudo"
+    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+        "pacman -Sy --needed --noconfirm --asdeps $pkgs"
+
+    echo "  --> Configure sudo..."
+    echo '%wheel ALL=(ALL) NOPASSWD: ALL' > "${INSTALLDIR}/etc/sudoers.d/qubes-build-user"
+
+    # Note: Enable x86 repos
+    tee -a "${INSTALLDIR}/etc/pacman.conf" <<EOF
+[multilib]
+SigLevel = PackageRequired
+Include = /etc/pacman.d/mirrorlist
+EOF
+
+    # Register custom repository (it will be created later)
+    tee -a "${INSTALLDIR}/etc/pacman.conf" <<EOF
+[qubes]
+SigLevel = Optional TrustAll
+Server = file:///tmp/qubes-packages-mirror-repo/pkgs
+EOF
+
+fi

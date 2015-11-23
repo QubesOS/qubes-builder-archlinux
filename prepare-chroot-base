@@ -1,0 +1,57 @@
+#!/bin/sh
+# vim: set ts=4 sw=4 sts=4 et :
+### prepare-chroot-base : Create a (any) chroot instance of Archlinux
+### May be called from ./scripts/01_install_core.sh or ./prepare-chroot-archlinux
+echo "--> Archlinux prepare-chroot-base"
+
+INSTALLDIR="$1"
+DISTRO="$2"  # aka elsewhere as $DIST
+
+BOOTSTRAP_DIR="${CACHEDIR}/bootstrap"
+PROXY_ENV="http_proxy=${REPO_PROXY:-${http_proxy}}"
+PACMAN_MIRROR="${PACMAN_MIRROR:-mirror.rackspace.com}"
+
+PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
+export PACMAN_CACHE_DIR
+
+set -e
+[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
+
+if ! [ -f "${BOOTSTRAP_DIR}/.extracted" -a -d "${CACHEDIR}/pacman_cache" ]; then
+    # XXX: Potential infinite loop in certain error conditions?
+    echo "  --> Bootstrap chroot environment may not exist, calling 00_prepare.sh..."
+    "${SCRIPTSDIR}/00_prepare.sh"
+fi
+
+# XXX: Also run if .extracted is newer than .prepared_base ??
+if [ -f "${INSTALLDIR}/.prepared_base" ]; then
+    echo "  --> NB: INSTALLDIR '${INSTALLDIR}' already appears to have an environment; will leave as-is!"
+    exit 0
+fi
+
+echo "  --> Binding INSTALLDIR '${INSTALLDIR}' to bootstrap environment..."
+mount --bind "$INSTALLDIR" "${BOOTSTRAP_DIR}/mnt"
+
+# TODO: This doesn't seem super elegant
+echo "  --> Setting pacman mirror as '$PACMAN_MIRROR'..."
+sed "s|#Server = http://${PACMAN_MIRROR}/|Server = http://${PACMAN_MIRROR}/|" \
+    < "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist.dist" \
+    > "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist"
+cp /etc/resolv.conf "${BOOTSTRAP_DIR}/etc/"
+
+echo "  --> Initializing pacman keychain..."
+"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/pacman-key --init
+"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/pacman-key --populate
+
+echo "  --> Installing core pacman packages..."
+export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
+"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c "$PROXY_ENV pacstrap /mnt base"
+unset PACMAN_CACHE_MOUNT_DIR
+
+echo "  --> Removing non-required linux kernel (can be added manually through a package)..."
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/pacman --noconfirm -Rsc linux
+
+echo "  --> Unbinding INSTALLDIR..."
+umount ${BOOTSTRAP_DIR}/mnt
+
+touch "${INSTALLDIR}/.prepared_base"
