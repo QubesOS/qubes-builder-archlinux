@@ -53,8 +53,13 @@ if ! [ -d "${INSTALLDIR}/home/user" ]; then
     "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
         "pacman -Sy --needed --noconfirm --asdeps $pkgs"
 
+    # makepkg internally calls sudo without '-E', so we need to add an
+    # env_keep to honor proxy settings
     echo "  --> Configure sudo..."
-    echo '%wheel ALL=(ALL) NOPASSWD: ALL' > "${INSTALLDIR}/etc/sudoers.d/qubes-build-user"
+    cat > "${INSTALLDIR}/etc/sudoers.d/qubes-build-user" <<EOF
+Defaults env_keep += "http_proxy https_proxy ftp_proxy"
+%wheel ALL=(ALL) NOPASSWD: ALL
+EOF
 
     # Note: Enable x86 repos
     tee -a "${INSTALLDIR}/etc/pacman.conf" <<EOF
