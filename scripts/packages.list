@@ -1,25 +1,53 @@
+# X
 xorg
 xterm
+
+# Need Python2 for Qubes
 python2
-artwiz-fonts
+
+# Basic utils
 ethtool
-font-bitstream-speedo
 net-tools
 sudo
+wget
+
+# User env
+ldns
+tmux
+vim
+zsh
+
+# Fonts
+artwiz-fonts
+font-bitstream-speedo
 ttf-dejavu
 ttf-freefont
-wget
-zsh
+ttf-inconsolata
+ttf-linux-libertine
+# Particularly good Unicode coverage:
+noto-fonts
+ttf-symbola
+
+# Needed for netvms
 networkmanager
 network-manager-applet
-linux-firmware
+
+# Gnome
 gnome-settings-daemon
+gtk-engines
 gvfs
 lxappearance
-gtk-engines
-firefox
-thunderbird
-xfce4-terminal
+
+# XFCE
 leafpad
 thunar
 thunar-volman
+xfce4-terminal
+
+# Major "productivity" applications
+evince
+firefox
+thunderbird
+
+# Hardening-related
+checksec
