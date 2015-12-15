@@ -44,6 +44,10 @@ if ! [ -d "${INSTALLDIR}/home/user" ]; then
     echo "  --> Synchronize resolv.conf..."
     cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 
+    # Checking for free disk free space doesn't work in chroots
+    echo "  --> Comment out CheckSpace in pacman.conf..."
+    sed 's/^ *CheckSpace/#CheckSpace/g' -i "${INSTALLDIR}/etc/pacman.conf"
+
     echo "  --> Installing required makepkg dependencies..."
     pkgs="binutils fakeroot sudo"
     "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
