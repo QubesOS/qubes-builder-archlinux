@@ -18,10 +18,8 @@ mkdir -p "${CACHEDIR}/pacman_cache"
 
 echo "  --> Downloading Archlinux bootstrap tarball (v${ARCHLINUX_REL_VERSION})..."
 
-# wget should honor an exported $http_proxy env value
-# XXX: Should we honor $REPO_PROXY here?
-wget -N -P "$CACHEDIR" "$BOOTSTRAP_URL"
-wget -N -P "$CACHEDIR" "${BOOTSTRAP_URL}.sig"
+http_proxy="$REPO_PROXY" wget -N -P "$CACHEDIR" "$BOOTSTRAP_URL"
+http_proxy="$REPO_PROXY" wget -N -P "$CACHEDIR" "${BOOTSTRAP_URL}.sig"
 
 echo "  --> Preparing GnuPG to verify tarball..."
 mkdir -p "${CACHEDIR}/gpghome"

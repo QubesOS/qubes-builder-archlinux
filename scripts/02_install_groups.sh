@@ -25,4 +25,4 @@ export PACMAN_CACHE_DIR
 echo "  --> Installing archlinux package groups..."
 echo "    --> Selected packages: ${PKGGROUPS}"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy=${REPO_PROXY} pacman -S --needed --noconfirm ${PKGGROUPS}"
+    "http_proxy='${REPO_PROXY}' pacman -S --needed --noconfirm ${PKGGROUPS}"

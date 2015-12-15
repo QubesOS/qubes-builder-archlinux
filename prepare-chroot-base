@@ -8,7 +8,6 @@ INSTALLDIR="$1"
 DISTRO="$2"  # aka elsewhere as $DIST
 
 BOOTSTRAP_DIR="${CACHEDIR}/bootstrap"
-PROXY_ENV="http_proxy=${REPO_PROXY:-${http_proxy}}"
 PACMAN_MIRROR="${PACMAN_MIRROR:-mirror.rackspace.com}"
 
 PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
@@ -45,7 +44,8 @@ echo "  --> Initializing pacman keychain..."
 
 echo "  --> Installing core pacman packages..."
 export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
-"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c "$PROXY_ENV pacstrap /mnt base"
+"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
+    "http_proxy='${REPO_PROXY}' pacstrap /mnt base"
 unset PACMAN_CACHE_MOUNT_DIR
 
 echo "  --> Removing non-required linux kernel (can be added manually through a package)..."
