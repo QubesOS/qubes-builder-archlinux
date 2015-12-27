@@ -2,8 +2,9 @@
 xorg
 xterm
 
-# Need Python2 for Qubes
+# Need Python for Qubes
 python2
+python3
 
 # Basic utils
 ethtool
