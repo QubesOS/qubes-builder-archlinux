@@ -36,7 +36,7 @@ echo "  --> Updating packman sources..."
 
 echo "  --> Installing qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "pacman -S --noconfirm qubes-vm-xen"
+    "pacman -S --force --noconfirm qubes-vm-xen" # --force is needed because package uses unconventional /usr/sbin
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "pacman -S --noconfirm qubes-vm-core"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
