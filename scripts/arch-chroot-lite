@@ -52,6 +52,28 @@ chroot_teardown() {
     unset CHROOT_ACTIVE_MOUNTS
 }
 
+chroot_add_resolv_conf() {
+  local chrootdir=$1 resolv_conf=$1/etc/resolv.conf
+
+  # Handle resolv.conf as a symlink to somewhere else.
+  if [[ -L $chrootdir/etc/resolv.conf ]]; then
+    # readlink(1) should always give us *something* since we know at this point
+    # it's a symlink. For simplicity, ignore the case of nested symlinks.
+    resolv_conf=$(readlink "$chrootdir/etc/resolv.conf")
+    if [[ $resolv_conf = /* ]]; then
+      resolv_conf=$chrootdir$resolv_conf
+    else
+      resolv_conf=$chrootdir/etc/$resolv_conf
+    fi
+
+    # ensure file exists to bind mount over
+    if [[ ! -f $resolv_conf ]]; then
+      install -Dm644 /dev/null "$resolv_conf" || return 1
+    fi
+  fi
+
+  chroot_add_mount /etc/resolv.conf "$resolv_conf" --bind
+}
 
 usage() {
     cat <<EOF
@@ -78,5 +100,6 @@ shift
 chroot_setup "$chrootdir" || die "failed to setup chroot %s" "$chrootdir"
 # arch-schroot-lite already has /etc/resolv.conf managed by the builder
 # scripts, so no need to bind to the host system's resolv.conf here
+chroot_add_resolv_conf "$chrootdir" || die "failed to setup resolv.conf"
 
 SHELL=/bin/sh unshare --fork --pid chroot "$chrootdir" "$@"
