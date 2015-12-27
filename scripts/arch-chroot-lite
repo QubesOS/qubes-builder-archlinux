@@ -52,7 +52,6 @@ chroot_teardown() {
     unset CHROOT_ACTIVE_MOUNTS
 }
 
-
 usage() {
     cat <<EOF
 usage: ${0##*/} chroot-dir [command]
@@ -76,7 +75,7 @@ shift
 [[ -d $chrootdir ]] || die "Can't create chroot on non-directory %s" "$chrootdir"
 
 chroot_setup "$chrootdir" || die "failed to setup chroot %s" "$chrootdir"
-# arch-schroot-lite already has /etc/resolv.conf managed by the builder
+# arch-chroot-lite already has /etc/resolv.conf managed by the builder
 # scripts, so no need to bind to the host system's resolv.conf here
 
 SHELL=/bin/sh unshare --fork --pid chroot "$chrootdir" "$@"

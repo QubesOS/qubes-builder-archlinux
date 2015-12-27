@@ -31,3 +31,6 @@ umount "${INSTALLDIR}/var/cache/pacman" || true
 unset PACMAN_CACHE_DIR
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "pacman --noconfirm -Scc"
+
+echo " --> Cleaning /etc/resolv.conf"
+rm -f /etc/resolv.conf
