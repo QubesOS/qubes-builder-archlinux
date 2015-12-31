@@ -22,6 +22,8 @@ PKGGROUPS="$(sed '/^ *#/d; s/  *#.*//' "${PKGLISTFILE}" | sed ':a;N;$!ba; s/\n/ 
 PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
 export PACMAN_CACHE_DIR
 
+cp /etc/resolv.conf "${INSTALLDIR}/etc/"
+
 echo "  --> Installing archlinux package groups..."
 echo "    --> Selected packages: ${PKGGROUPS}"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
