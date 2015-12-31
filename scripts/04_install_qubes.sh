@@ -72,8 +72,8 @@ ln -s ../usr/lib/os-release "${INSTALLDIR}/etc/os-release"
 sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"
 
 # Reregistering qubes repository to the remote version
-echo "  --> Registering Qubes remote repository..."
-cat >> "${INSTALLDIR}/etc/pacman.conf" <<EOF
-[qubes]
-Server = http://olivier.medoc.free.fr/archlinux/pkgs/
-EOF
+#echo "  --> Registering Qubes remote repository..."
+#cat >> "${INSTALLDIR}/etc/pacman.conf" <<EOF
+#[qubes]
+#Server = http://olivier.medoc.free.fr/archlinux/r3/
+#EOF
