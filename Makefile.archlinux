@@ -155,8 +155,10 @@ ifeq (,$(ARCH_BUILD_DIRS))
 else
 	mkdir -p $(UPDATE_REPO)/pkgs
 	for arch_build_dir in $(ARCH_BUILD_DIRS); do\
-		pkgname=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2`;\
-		ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.xz $(UPDATE_REPO)/pkgs/;\
+		pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
+		for pkgname in $$pkgnames ; do; \
+			ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.xz $(UPDATE_REPO)/pkgs/; \
+		done; \
 	done; \
 
 endif
