@@ -27,8 +27,8 @@ ifneq ($(DEBUG),0)
   $(info ║ Repo Variables)
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
   $(info ║ SRC_DIR:               $(SRC_DIR))                # qubes-src
-  $(info ║ CHROOT_DIR:            $(CHROOT_DIR))             # /home/user/qubes-builder/chroot-jessie
-  $(info ║ BUILDER_REPO_DIR:      $(BUILDER_REPO_DIR))       # /home/user/qubes-builder/qubes-packages-mirror-repo/jessie
+  $(info ║ CHROOT_DIR:            $(CHROOT_DIR))             # /home/user/qubes-builder/chroot-archlinux
+  $(info ║ BUILDER_REPO_DIR:      $(BUILDER_REPO_DIR))       # /home/user/qubes-builder/qubes-packages-mirror-repo/archlinux
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
   $(info ║ Chroot Variables)
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
@@ -139,7 +139,7 @@ dist-copy-out:
 		done;\
 		mkdir -p $(BUILDER_REPO_DIR)/pkgs;\
 		ln -f -t $(BUILDER_REPO_DIR)/pkgs $$arch_chroot_dir/*.pkg.tar.xz;\
-	done; \
+	done;\
 	mv -t $$arch_pkg_dir $$arch_chroot_dir/*.pkg.tar.xz
 
 ### Additional targets
@@ -156,10 +156,10 @@ else
 	mkdir -p $(UPDATE_REPO)/pkgs
 	for arch_build_dir in $(ARCH_BUILD_DIRS); do\
 		pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
-		for pkgname in $$pkgnames ; do; \
-			ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.xz $(UPDATE_REPO)/pkgs/; \
-		done; \
-	done; \
+		for pkgname in $$pkgnames; do\
+			ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.xz $(UPDATE_REPO)/pkgs/;\
+		done;\
+	done;\
 
 endif
 
