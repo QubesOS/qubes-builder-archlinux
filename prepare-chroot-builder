@@ -49,7 +49,7 @@ if ! [ -d "${INSTALLDIR}/home/user" ]; then
     sed 's/^ *CheckSpace/#CheckSpace/g' -i "${INSTALLDIR}/etc/pacman.conf"
 
     echo "  --> Installing required makepkg dependencies..."
-    pkgs="binutils fakeroot sudo"
+    pkgs="base-devel binutils fakeroot sudo"
     "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
         "http_proxy='${REPO_PROXY}' pacman -Sy --needed --noconfirm --asdeps $pkgs"
 
