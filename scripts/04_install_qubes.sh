@@ -32,15 +32,15 @@ cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 
 echo "  --> Updating packman sources..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "pacman -Sy"
+    "http_proxy='${REPO_PROXY}' pacman -Sy"
 
 echo "  --> Installing qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "pacman -S --noconfirm qubes-vm-xen"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-xen"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "pacman -S --noconfirm qubes-vm-core"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-core"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "pacman -S --noconfirm qubes-vm-gui"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui"
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
