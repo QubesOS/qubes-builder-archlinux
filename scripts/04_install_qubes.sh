@@ -35,6 +35,10 @@ echo "  --> Updating packman sources..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Sy"
 
+echo "  --> Checking available qubes packages (for debugging only)..."
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+    "http_proxy='${REPO_PROXY}' pacman -Ss qubes"
+
 echo "  --> Installing qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-xen"
