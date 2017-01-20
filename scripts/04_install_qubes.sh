@@ -16,8 +16,9 @@ su -c "echo 'SigLevel = PackageRequired' >> $INSTALLDIR/etc/pacman.conf"
 su -c "echo 'Include = /etc/pacman.d/mirrorlist' >> $INSTALLDIR/etc/pacman.conf"
 
 echo "  --> Updating Qubes custom repository..."
+# Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "cd /tmp/qubes-packages-mirror-repo && repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz"
+    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls pkgs/*.pkg.tar.xz`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
