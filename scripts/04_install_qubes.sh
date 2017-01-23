@@ -16,8 +16,9 @@ su -c "echo 'SigLevel = PackageRequired' >> $INSTALLDIR/etc/pacman.conf"
 su -c "echo 'Include = /etc/pacman.d/mirrorlist' >> $INSTALLDIR/etc/pacman.conf"
 
 echo "  --> Updating Qubes custom repository..."
+# Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "cd /tmp/qubes-packages-mirror-repo && repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz"
+    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.xz`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
@@ -33,6 +34,10 @@ cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 echo "  --> Updating packman sources..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Sy"
+
+echo "  --> Checking available qubes packages (for debugging only)..."
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+    "http_proxy='${REPO_PROXY}' pacman -Ss qubes"
 
 echo "  --> Installing qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
@@ -63,10 +68,6 @@ sed 's/#en_DE/en_DE/g' -i "${INSTALLDIR}/etc/locale.gen"
 # Creating a random file in /lib/modules to ensure that the directory in never deleted when packages are removed
 mkdir -p "${INSTALLDIR}/lib/modules"
 touch "${INSTALLDIR}/lib/modules/QUBES_NODELETE"
-
-# Ensure os-release is setup correctly or Fedora dracut will fail when displaying the OS
-# also ensure that the path is relative, because root is in /newroot before dracut switch root
-ln -s ../usr/lib/os-release "${INSTALLDIR}/etc/os-release"
 
 # Disable qubes local repository
 sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"

@@ -25,8 +25,9 @@ env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
     'cd /tmp/qubes-packages-mirror-repo/pkgs && if [ -n "$(ls *.sig)" ] ; then rm *.sig ; fi'
 
 # Generate custom repository metadata based on packages that are available
+# Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
 env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
-    'cd /tmp/qubes-packages-mirror-repo && repo-add pkgs/qubes.db.tar.gz pkgs/*.pkg.tar.xz;'
+    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.xz`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 
 # Ensure pacman doesn't check for disk free space -- it doesn't work in chroots
 env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
