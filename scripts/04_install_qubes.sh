@@ -69,10 +69,6 @@ sed 's/#en_DE/en_DE/g' -i "${INSTALLDIR}/etc/locale.gen"
 mkdir -p "${INSTALLDIR}/lib/modules"
 touch "${INSTALLDIR}/lib/modules/QUBES_NODELETE"
 
-# Ensure os-release is setup correctly or Fedora dracut will fail when displaying the OS
-# also ensure that the path is relative, because root is in /newroot before dracut switch root
-ln -s ../usr/lib/os-release "${INSTALLDIR}/etc/os-release"
-
 # Disable qubes local repository
 sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"
 
