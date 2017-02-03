@@ -44,6 +44,12 @@ echo "  --> Installing qubes packages..."
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-xen"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-core"
+
+echo "  --> Disabling remote qubes repository..."
+test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled"
+test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.conf" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.conf" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.disabled"
+
+echo "  --> Finishing installation of qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui"
 
