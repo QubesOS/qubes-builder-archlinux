@@ -81,7 +81,5 @@ sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"
 
 # Reregistering qubes repository to the remote version
 #echo "  --> Registering Qubes remote repository..."
-#cat >> "${INSTALLDIR}/etc/pacman.conf" <<EOF
-#[qubes]
-#Server = http://olivier.medoc.free.fr/archlinux/r3/
-#EOF
+#test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf"
+#test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.disabled" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.disabled" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.conf"
