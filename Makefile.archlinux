@@ -13,7 +13,7 @@
 #     CHROOT_DIR (qubes-src will be created in this directory)
 #
 PACKAGE_LIST = $(ARCH_BUILD_DIRS)
-DIST_BUILD_DIR = /home/user
+DIST_BUILD_DIR = /home/user/qubes-builder
 
 ### Local variables
 RUN_AS_USER = user
@@ -33,8 +33,8 @@ ifneq ($(DEBUG),0)
   $(info ║ Chroot Variables)
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
   $(info ║ CHROOT_DIR:            $(CHROOT_DIR))             #
-  $(info ║ DIST_BUILD_DIR:        $(DIST_BUILD_DIR))         # /home/user
-  $(info ║ DIST_SRC:              $(DIST_SRC))               # /home/user/qubes-src/repo
+  $(info ║ DIST_BUILD_DIR:        $(DIST_BUILD_DIR))         # /home/user/qubes-builder
+  $(info ║ DIST_SRC:              $(DIST_SRC))               # /home/user/qubes-builder/qubes-src/repo
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
   $(info ║ Build Variables)
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
