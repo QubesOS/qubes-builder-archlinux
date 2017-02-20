@@ -79,6 +79,10 @@ touch "${INSTALLDIR}/lib/modules/QUBES_NODELETE"
 # Disable qubes local repository
 sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"
 
+# Enable Qubes Proxy in template
+PACMAN_PROXY='# Enable usage of Qubes Proxy Service\nXferCommand = echo "$(basename -s .part %o)" \&\& http_proxy=10.137.255.254:8082 /usr/bin/curl --progress-bar -C - -f %u -o %o'
+sed "s+^#XferCommand.*curl.*$+&\n${PACMAN_PROXY}+" -i "${INSTALLDIR}/etc/pacman.conf"
+
 # Reregistering qubes repository to the remote version
 #echo "  --> Registering Qubes remote repository..."
 #test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf"
