@@ -18,7 +18,7 @@ DIST_BUILD_DIR = /home/user
 ### Local variables
 RUN_AS_USER = user
 
-PACMAN_MIRROR ?= mirror.rackspace.com
+PACMAN_MIRROR ?= http://mirror.rackspace.com
 
 
 DEBUG ?= 0

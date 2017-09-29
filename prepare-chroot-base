@@ -8,7 +8,7 @@ INSTALLDIR="$1"
 DISTRO="$2"  # aka elsewhere as $DIST
 
 BOOTSTRAP_DIR="${CACHEDIR}/bootstrap"
-PACMAN_MIRROR="${PACMAN_MIRROR:-mirror.rackspace.com}"
+PACMAN_MIRROR="${PACMAN_MIRROR:-http://mirror.rackspace.com}"
 
 PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
 export PACMAN_CACHE_DIR
@@ -33,7 +33,7 @@ mount --bind "$INSTALLDIR" "${BOOTSTRAP_DIR}/mnt"
 
 # TODO: This doesn't seem super elegant
 echo "  --> Setting pacman mirror as '$PACMAN_MIRROR'..."
-sed "s|#Server = http://${PACMAN_MIRROR}/|Server = http://${PACMAN_MIRROR}/|" \
+sed "s|#Server = ${PACMAN_MIRROR}/|Server = ${PACMAN_MIRROR}/|" \
     < "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist.dist" \
     > "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist"
 cp /etc/resolv.conf "${BOOTSTRAP_DIR}/etc/"
