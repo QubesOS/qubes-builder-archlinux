@@ -47,7 +47,7 @@ echo "  --> Installing qubes packages..."
 
 echo "  --> Finishing installation of qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui qubes-vm-pulseaudio"
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
