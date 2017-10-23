@@ -45,10 +45,6 @@ echo "  --> Installing qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-core"
 
-echo "  --> Disabling remote qubes repository..."
-test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled"
-test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.conf" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.conf" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.disabled"
-
 echo "  --> Finishing installation of qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui"
@@ -78,8 +74,3 @@ touch "${INSTALLDIR}/lib/modules/QUBES_NODELETE"
 
 # Disable qubes local repository
 sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"
-
-# Reregistering qubes repository to the remote version
-#echo "  --> Registering Qubes remote repository..."
-#test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.disabled" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.1.conf"
-#test -f "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.disabled" && mv  "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.disabled" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-3.2.conf"
