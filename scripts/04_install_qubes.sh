@@ -51,11 +51,21 @@ echo "  --> Finishing installation of qubes packages..."
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
+#
+# /etc/fstab: static file system information
+#
+
+# Templates Directories
 /dev/mapper/dmroot /                       ext4 defaults,noatime        1 1
 /dev/xvdb		/rw			auto	noauto,defaults,discard	1 2
-/rw/home        /home       none    noauto,bind,defaults 0 0
 /dev/xvdc1      swap                    swap    defaults        0 0
-/dev/xvdi	/mnt/removable	auto noauto,user,rw 0 0
+
+# Template Binds
+/rw/home        /home       none    noauto,bind,defaults 0 0
+
+# Template Customizations
+tmpfs                   /dev/shm                tmpfs   defaults,size=1G        0 0
+
 EOF
 
 echo "  --> Configuring system to our preferences..."
