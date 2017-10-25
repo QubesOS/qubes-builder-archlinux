@@ -2,10 +2,6 @@
 xorg
 xterm
 
-# Need Python for Qubes
-python2
-python3
-
 # Basic utils
 ethtool
 net-tools
@@ -16,7 +12,6 @@ wget
 ldns
 tmux
 vim
-zsh
 
 # Fonts
 artwiz-fonts

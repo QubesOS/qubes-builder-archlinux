@@ -2,14 +2,8 @@
 xorg
 xterm
 
-# Need Python2 for Qubes
-python2
-
 # Basic utils
 ethtool
 net-tools
 sudo
 wget
-
-# User env
-zsh
