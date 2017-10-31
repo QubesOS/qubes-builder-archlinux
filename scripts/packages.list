@@ -24,10 +24,6 @@ ttf-linux-libertine
 noto-fonts
 ttf-symbola
 
-# Needed for netvms
-networkmanager
-network-manager-applet
-
 # Gnome
 gnome-settings-daemon
 gtk-engines

@@ -31,7 +31,7 @@ EOF
 echo "  --> Synchronize resolv.conf..."
 cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 
-echo "  --> Updating packman sources..."
+echo "  --> Updating pacman sources..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Sy"
 
@@ -48,6 +48,14 @@ echo "  --> Installing qubes packages..."
 echo "  --> Finishing installation of qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui qubes-vm-pulseaudio"
+
+echo "  --> Installing qubes apps"
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-app-split-gpg qubes-vm-app-usb-proxy"
+
+echo "  --> Copying binary repository keyring package"
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+    "cp /tmp/qubes-packages-mirror-repo/pkgs/qubes-vm-keyring*.pkg.tar.xz /etc/pacman.d/"
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
