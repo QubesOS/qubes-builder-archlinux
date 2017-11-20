@@ -51,7 +51,7 @@ echo "  --> Finishing installation of qubes packages..."
 
 echo "  --> Installing qubes apps"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-app-split-gpg qubes-vm-app-usb-proxy"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-gpg-split qubes-usb-proxy"
 
 echo "  --> Copying binary repository keyring package"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \

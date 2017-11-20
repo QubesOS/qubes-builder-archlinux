@@ -35,7 +35,7 @@ chroot_setup() {
         PACMAN_CACHE_MOUNT_DIR="${PACMAN_CACHE_MOUNT_DIR:-$1/var/cache/pacman}"
         mkdir -p "$PACMAN_CACHE_MOUNT_DIR"
         # Cached qubes packages may be from old runs and throw checksum errors
-        rm "$PACMAN_CACHE_DIR/pkg"/qubes-vm-*.pkg.tar.xz 2>/dev/null || true
+        rm "$PACMAN_CACHE_DIR/pkg"/qubes-*.pkg.tar.xz 2>/dev/null || true
         chroot_add_mount "$PACMAN_CACHE_DIR" "$PACMAN_CACHE_MOUNT_DIR" --bind
     fi
     if [[ -d "$PACMAN_CUSTOM_REPO_DIR" ]]; then
