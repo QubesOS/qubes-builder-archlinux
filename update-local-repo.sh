@@ -12,8 +12,10 @@ mkdir -p "$PKGS_DIR"
 if [ ! -f "${PKGS_DIR}/qubes.db" ]; then
     # pacman does not deal correctly with empty repositories
     echo "  -> Repo '${PKGS_DIR}' appears empty; initialising with pacman itself..."
-    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/{pacman,sudo}*.pkg.tar.xz "${PKGS_DIR}/"
-    cp "${CACHEDIR}/pacman_cache/pkg"/{pacman,sudo}*.pkg.tar.xz "${PKGS_DIR}/"
+    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/pacman*.pkg.tar.xz "${PKGS_DIR}/"
+    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/sudo*.pkg.tar.xz "${PKGS_DIR}/"
+    cp "${CACHEDIR}/pacman_cache/pkg"/pacman*.pkg.tar.xz "${PKGS_DIR}/"
+    cp "${CACHEDIR}/pacman_cache/pkg"/sudo*.pkg.tar.xz "${PKGS_DIR}/"
 
 fi
 
