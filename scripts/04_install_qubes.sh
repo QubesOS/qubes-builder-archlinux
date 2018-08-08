@@ -64,12 +64,13 @@ cat >> "${INSTALLDIR}/etc/fstab" <<EOF
 #
 
 # Templates Directories
-/dev/mapper/dmroot /                       ext4 defaults,noatime        1 1
+/dev/mapper/dmroot /                       ext4 defaults,discard,noatime        1 1
 /dev/xvdb		/rw			auto	noauto,defaults,discard	1 2
 /dev/xvdc1      swap                    swap    defaults        0 0
 
 # Template Binds
 /rw/home        /home       none    noauto,bind,defaults 0 0
+/rw/usrlocal    /usr/local  none    noauto,bind,defaults 0 0
 
 # Template Customizations
 tmpfs                   /dev/shm                tmpfs   defaults,size=1G        0 0
