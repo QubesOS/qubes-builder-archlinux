@@ -23,9 +23,9 @@ chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
 cat >> "${INSTALLDIR}/etc/pacman.conf" <<EOF
-[qubes] # QubesTMP
-SigLevel = Optional TrustAll # QubesTMP
-Server = file:///tmp/qubes-packages-mirror-repo/pkgs  # QubesTMP
+[qubes]
+SigLevel = Optional TrustAll
+Server = file:///tmp/qubes-packages-mirror-repo/pkgs
 EOF
 
 echo "  --> Synchronize resolv.conf..."
@@ -92,4 +92,4 @@ mkdir -p "${INSTALLDIR}/lib/modules"
 touch "${INSTALLDIR}/lib/modules/QUBES_NODELETE"
 
 # Disable qubes local repository
-sed '/QubesTMP/d' -i "${INSTALLDIR}/etc/pacman.conf"
+sed '/\[qubes]/,+2 d' -i "${INSTALLDIR}/etc/pacman.conf"
