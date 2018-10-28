@@ -22,7 +22,7 @@ ttf-inconsolata
 ttf-linux-libertine
 # Particularly good Unicode coverage:
 noto-fonts
-ttf-symbola
+noto-fonts-emoji
 
 # Gnome
 gnome-settings-daemon
