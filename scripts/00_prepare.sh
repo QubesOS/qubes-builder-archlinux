@@ -6,7 +6,7 @@ echo "--> Archlinux 00_prepare.sh"
 ARCHLINUX_PLUGIN_DIR="${ARCHLINUX_PLUGIN_DIR:-"${SCRIPTSDIR}/.."}"
 
 ARCHLINUX_SRC_PREFIX="${ARCHLINUX_SRC_PREFIX:-http://mirrors.kernel.org/archlinux}"
-ARCHLINUX_REL_VERSION="${ARCHLINUX_REL_VERSION:-$(date --date=yesterday '+%Y.%m').01}"
+ARCHLINUX_REL_VERSION="${ARCHLINUX_REL_VERSION:-$(date --date=yesterday '+%Y.%m').02}"
 BOOTSTRAP_TARBALL="archlinux-bootstrap-${ARCHLINUX_REL_VERSION}-x86_64.tar.gz"
 
 BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/${ARCHLINUX_REL_VERSION}/${BOOTSTRAP_TARBALL}"
