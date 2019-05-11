@@ -14,7 +14,7 @@ tmux
 vim
 
 # Fonts
-artwiz-fonts
+terminus-font
 font-bitstream-speedo
 ttf-dejavu
 ttf-freefont
