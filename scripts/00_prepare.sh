@@ -6,10 +6,9 @@ echo "--> Archlinux 00_prepare.sh"
 ARCHLINUX_PLUGIN_DIR="${ARCHLINUX_PLUGIN_DIR:-"${SCRIPTSDIR}/.."}"
 
 ARCHLINUX_SRC_PREFIX="${ARCHLINUX_SRC_PREFIX:-http://mirrors.kernel.org/archlinux}"
-ARCHLINUX_REL_VERSION="${ARCHLINUX_REL_VERSION:-$(date --date=yesterday '+%Y.%m').01}"
-BOOTSTRAP_TARBALL="archlinux-bootstrap-${ARCHLINUX_REL_VERSION}-x86_64.tar.gz"
+BOOTSTRAP_TARBALL=$(wget -qO- $ARCHLINUX_SRC_PREFIX/iso/latest/sha1sums.txt | grep bootstrap | awk '{print $2}')
 
-BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/${ARCHLINUX_REL_VERSION}/${BOOTSTRAP_TARBALL}"
+BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/latest/${BOOTSTRAP_TARBALL}"
 GPG_ENV="GNUPGHOME=${CACHEDIR}/gpghome"
 
 [ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
