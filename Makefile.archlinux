@@ -95,7 +95,6 @@ dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 		mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
 		sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
 	fi
-	
 	@echo "  --> Synchronize resolv.conf, in case it changed since last run..."
 	@sudo cp /etc/resolv.conf "$(CHROOT_DIR)/etc/resolv.conf"
 
@@ -150,29 +149,17 @@ update-repo:
 ifndef UPDATE_REPO
 	$(error "You need to specify destination repo in UPDATE_REPO variable")
 endif
-ifeq (,$(ARCH_BUILD_DIRS))
-	@true
-else
 	mkdir -p $(UPDATE_REPO)/pkgs
 	for arch_build_dir in $(ARCH_BUILD_DIRS); do\
-		pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
-		for pkgname in $$pkgnames; do\
-			ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.xz $(UPDATE_REPO)/pkgs/;\
-		done;\
+	  pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
+	  for pkgname in $$pkgnames; do\
+	    ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.xz $(UPDATE_REPO)/pkgs/;\
+	  done;\
 	done;\
-
-endif
 
 # Sign packages
 sign:
-ifeq (,$(ARCH_BUILD_DIRS))
-	@true
-else
 	cd $(ORIG_SRC)
 	for filename in pkgs/*.pkg.tar.xz ; do
-		# if ! [ -f "$filename" ] ; then
-		# Replace package signature in case it has changed
-		gpg --detatch-sign "$filename"
+	  qubes-gpg-client-wrapper --detatch-sign "$filename" > "$filename.sig"
 	done
-endif
-
