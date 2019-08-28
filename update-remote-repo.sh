@@ -17,8 +17,7 @@ done
 sudo mount --bind $archlinux_directory chroot-$name/tmp/qubes-packages-mirror-repo
 
 echo "Generating 4.0 repository"
-sudo chroot chroot-$name su user -c 'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/qubes*4.0.*.pkg.tar.xz` ; do repo-add pkgs/'"$db"'.tar.gz "$pkg";done;'
-sudo chroot chroot-$name su user -c 'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/qubes-vm-xen-4.8.*.pkg.tar.xz` ; do repo-add pkgs/'"$db"'.tar.gz "$pkg";done;'
+sudo chroot chroot-$name su user -c 'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/qubes*.pkg.tar.xz` ; do repo-add pkgs/'"$db"'.tar.gz "$pkg";done;'
 
 # Replace link with the real thing because it cannot be uploaded easily to repository
 rm $package_directory/$db
