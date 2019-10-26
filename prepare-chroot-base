@@ -48,9 +48,6 @@ export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
     "http_proxy='${REPO_PROXY}' pacstrap /mnt base"
 unset PACMAN_CACHE_MOUNT_DIR
 
-echo "  --> Removing non-required linux kernel (can be added manually through a package)..."
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/pacman --noconfirm -Rsc linux
-
 echo "  --> Unbinding INSTALLDIR..."
 umount ${BOOTSTRAP_DIR}/mnt
 
