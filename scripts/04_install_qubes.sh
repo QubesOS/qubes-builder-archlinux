@@ -22,11 +22,9 @@ echo "  --> Updating Qubes custom repository..."
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
-cat >> "${INSTALLDIR}/etc/pacman.conf" <<EOF
-[qubes]
-SigLevel = Optional TrustAll
-Server = file:///tmp/qubes-packages-mirror-repo/pkgs
-EOF
+su -c 'echo "[qubes] " >> $INSTALLDIR/etc/pacman.conf'
+su -c 'echo "SigLevel = Optional TrustAll " >> $INSTALLDIR/etc/pacman.conf'
+su -c 'echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " >> $INSTALLDIR/etc/pacman.conf' 
 
 echo "  --> Synchronize resolv.conf..."
 cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
