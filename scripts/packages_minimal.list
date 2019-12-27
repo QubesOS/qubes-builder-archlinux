@@ -7,3 +7,4 @@ ethtool
 net-tools
 sudo
 wget
+diffutils
