@@ -81,6 +81,7 @@ ln -s /dev/null "${INSTALLDIR}/etc/udev/rules.d/80-net-name-slot.rules"
 # Enable some locales (incl. UTF-8)
 sed 's/#en_US/en_US/g' -i "${INSTALLDIR}/etc/locale.gen"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" locale-gen
+echo 'LANG=en_US.UTF-8' > "${INSTALLDIR}/etc/locale.conf"
 
 # Creating a random file in /lib/modules to ensure that the directory in never deleted when packages are removed
 mkdir -p "${INSTALLDIR}/lib/modules"
