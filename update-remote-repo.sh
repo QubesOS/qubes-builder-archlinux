@@ -7,7 +7,7 @@ db=qubes.db
 
 echo "Signing all unsigned packages"
 
-for filename in $package_directory/*.pkg.tar.xz ; do
+for filename in $package_directory/*.pkg.tar.* ; do
 	if ! [ -f "$filename.sig" ] ; then
 		echo "Signing $filename"
 		qubes-gpg-client-wrapper --detach-sign "$filename" > "$filename.sig"
@@ -17,7 +17,7 @@ done
 sudo mount --bind $archlinux_directory chroot-$name/tmp/qubes-packages-mirror-repo
 
 echo "Generating 4.0 repository"
-sudo chroot chroot-$name su user -c 'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/qubes*.pkg.tar.xz` ; do repo-add pkgs/'"$db"'.tar.gz "$pkg";done;'
+sudo chroot chroot-$name su user -c 'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/qubes*.pkg.tar.*` ; do repo-add pkgs/'"$db"'.tar.gz "$pkg";done;'
 
 # Replace link with the real thing because it cannot be uploaded easily to repository
 rm $package_directory/$db
