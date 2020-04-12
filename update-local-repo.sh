@@ -12,10 +12,10 @@ mkdir -p "$PKGS_DIR"
 if [ ! -f "${PKGS_DIR}/qubes.db" ]; then
     # pacman does not deal correctly with empty repositories
     echo "  -> Repo '${PKGS_DIR}' appears empty; initialising with pacman itself..."
-    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/pacman*.pkg.tar.xz "${PKGS_DIR}/"
-    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/sudo*.pkg.tar.xz "${PKGS_DIR}/"
-    cp "${CACHEDIR}/pacman_cache/pkg"/pacman*.pkg.tar.xz "${PKGS_DIR}/"
-    cp "${CACHEDIR}/pacman_cache/pkg"/sudo*.pkg.tar.xz "${PKGS_DIR}/"
+    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/pacman*.pkg.tar.* "${PKGS_DIR}/"
+    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/sudo*.pkg.tar.* "${PKGS_DIR}/"
+    cp "${CACHEDIR}/pacman_cache/pkg"/pacman*.pkg.tar.* "${PKGS_DIR}/"
+    cp "${CACHEDIR}/pacman_cache/pkg"/sudo*.pkg.tar.* "${PKGS_DIR}/"
 
 fi
 
@@ -29,7 +29,7 @@ env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
 # Generate custom repository metadata based on packages that are available
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
 env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
-    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.xz`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
+    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.*`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 
 # Ensure pacman doesn't check for disk free space -- it doesn't work in chroots
 env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
