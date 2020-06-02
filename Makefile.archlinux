@@ -121,7 +121,7 @@ ifndef PACKAGE
 	$(error "PACKAGE need to be set!")
 endif
 	@echo "  --> Building package in $(DIST_SRC)"
-	sudo $(CHROOT_ENV) chroot "$(CHROOT_DIR)" su user -c 'cd "$(DIST_SRC)" && cp $(PACKAGE)/PKGBUILD* ./ && env http_proxy="$(REPO_PROXY)" makepkg --syncdeps --noconfirm --skipinteg'
+	sudo $(CHROOT_ENV) chroot "$(CHROOT_DIR)" su user -c 'cd "$(DIST_SRC)" && cp $(PACKAGE)/PKGBUILD* ./ && env http_proxy="$(REPO_PROXY)" SOURCE_DATE_EPOCH=$(shell git -C "$$ORIG_SRC" log -1 --pretty=format:%ct) makepkg --syncdeps --noconfirm --skipinteg'
 
 # dist-copy-out - copy compiled package out of chroot env; this target should
 #     move packages to ORIG_SRC (distro-specific subdir) and hardlink them to
