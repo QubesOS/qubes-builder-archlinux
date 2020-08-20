@@ -16,7 +16,7 @@ vim
 
 # Fonts
 terminus-font
-font-bitstream-speedo
+#font-bitstream-speedo
 ttf-dejavu
 ttf-inconsolata
 ttf-linux-libertine
