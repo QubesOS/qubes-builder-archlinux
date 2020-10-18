@@ -151,10 +151,10 @@ ifndef UPDATE_REPO
 endif
 	mkdir -p $(UPDATE_REPO)/pkgs
 	for arch_build_dir in $(ARCH_BUILD_DIRS); do\
-	  pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
-	  for pkgname in $$pkgnames; do\
-	    ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.* $(UPDATE_REPO)/pkgs/;\
-	  done;\
+		pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
+		for pkgname in $$pkgnames; do\
+			ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.* $(UPDATE_REPO)/pkgs/;\
+		done;\
 	done;\
 
 # Sign packages
