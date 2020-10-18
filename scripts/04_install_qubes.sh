@@ -42,6 +42,8 @@ echo "  --> Installing qubes packages..."
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-xen"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-core"
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-qrexec"
 
 echo "  --> Finishing installation of qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
