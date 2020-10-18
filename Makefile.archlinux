@@ -91,7 +91,7 @@ dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 	fi
 	@mkdir -p "$(BUILDER_REPO_DIR)/pkgs"
 	@if ! [ -d "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo/pkgs" ]; then\
-		echo "    --> sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-deb";"; \
+		echo "    --> sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";"; \
 		mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
 		sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
 	fi
@@ -126,15 +126,19 @@ endif
 # dist-copy-out - copy compiled package out of chroot env; this target should
 #     move packages to ORIG_SRC (distro-specific subdir) and hardlink them to
 #     BUILDER_REPO_DIR
+dist-copy-out: pkg_list_path = $(ORIG_SRC)/$(OUTPUT_DIR)/$(notdir $(PACKAGE)).list
 dist-copy-out:
 	@echo "--> Archlinux dist-copy-out (makefile)"
 	@echo "--> Done:" >&3
 	@set -e;\
+	shopt -s nullglob;\
+	echo -n > $(pkg_list_path);\
 	for arch_chroot_dir in $(CHROOT_DIR)/$(DIST_SRC)/; do\
-		arch_pkg_dir=$(ORIG_SRC)/pkgs;\
+		arch_pkg_dir=$(ORIG_SRC)/$(OUTPUT_DIR)/pkgs;\
 		mkdir -p $$arch_pkg_dir;\
 		for pkg in $$arch_chroot_dir/*.pkg.tar.*; do\
 			echo "      $$arch_pkg_dir/`basename $$pkg`" >&3 ;\
+			echo "$(OUTPUT_DIR)/`basename $$arch_chroot_dir`/`basename $$pkg`" >> $(pkg_list_path);\
 		done;\
 		mkdir -p $(BUILDER_REPO_DIR)/pkgs;\
 		ln -f -t $(BUILDER_REPO_DIR)/pkgs $$arch_chroot_dir/*.pkg.tar.*;\
@@ -143,23 +147,35 @@ dist-copy-out:
 
 ### Additional targets
 
+# Sign packages
+sign: sign_client = $(if $(GNUPG),$(GNUPG),gpg)
+sign:
+	@if [ -d $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs ]; then \
+		cd $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs; \
+		for filename in *.pkg.tar.zst; do\
+			if [ -e $$filename ]; then \
+				$(sign_client) --yes --detach-sign -o "$$filename.sig" "$$filename";\
+				ln -f -t $(BUILDER_REPO_DIR)/pkgs "$$filename.sig";\
+			fi; \
+		done; \
+	fi
+
+
 # Copies requested packages (based on PACKAGE_SET, COMPONENT, DIST) to
 # requested repository (UPDATE_REPO)
 update-repo:
 ifndef UPDATE_REPO
-	$(error "You need to specify destination repo in UPDATE_REPO variable")
+       $(error "You need to specify destination repo in UPDATE_REPO variable")
 endif
-	mkdir -p $(UPDATE_REPO)/pkgs
+ifeq (,$(PACKAGE_LIST))
+	@true
+else
+	mkdir -p $(UPDATE_REPO)/pkgs; \
 	for arch_build_dir in $(ARCH_BUILD_DIRS); do\
 		pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
-		for pkgname in $$pkgnames; do\
-			ln -f $(ORIG_SRC)/pkgs/$$pkgname-*.pkg.tar.* $(UPDATE_REPO)/pkgs/;\
-		done;\
-	done;\
-
-# Sign packages
-sign:
-	cd $(ORIG_SRC)
-	for filename in pkgs/*.pkg.tar.* ; do
-	  qubes-gpg-client-wrapper --detatch-sign "$filename" > "$filename.sig"
+			for pkgname in $$pkgnames; do\
+				ln -f $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs/$$pkgname-*.pkg.tar.zst $(UPDATE_REPO)/pkgs/;\
+				ln -f $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs/$$pkgname-*.pkg.tar.zst.sig $(UPDATE_REPO)/pkgs/;\
+			done;\
 	done
+endif
