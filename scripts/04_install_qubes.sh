@@ -37,21 +37,13 @@ echo "  --> Checking available qubes packages (for debugging only)..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Ss qubes"
 
-echo "  --> Installing qubes packages..."
+echo "  --> Installing mandatory qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-xen"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-core"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-qrexec"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-dependencies"
 
-echo "  --> Finishing installation of qubes packages..."
+echo "  --> Installing recommended qubes apps"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui qubes-vm-pulseaudio"
-
-echo "  --> Installing qubes apps"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-gpg-split qubes-usb-proxy"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-recommended"
 
 echo "  --> Copying binary repository keyring package"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
