@@ -14,7 +14,18 @@ PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
 export PACMAN_CACHE_DIR
 
 set -e
-[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
+if [ "$VERBOSE" -ge 2 ] || [ "$DEBUG" -gt 0 ]; then
+    set -x
+fi
+
+exit_prepare() {
+    local exit_code=$?
+    echo "  --> Unbinding INSTALLDIR..."
+    umount ${BOOTSTRAP_DIR}/mnt || true
+    exit $exit_code
+}
+
+trap 'exit_prepare' 0 1 2 3 6 15
 
 if ! [ -f "${BOOTSTRAP_DIR}/.extracted" -a -d "${CACHEDIR}/pacman_cache" ]; then
     # XXX: Potential infinite loop in certain error conditions?
@@ -47,8 +58,5 @@ export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
 "${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacstrap /mnt base"
 unset PACMAN_CACHE_MOUNT_DIR
-
-echo "  --> Unbinding INSTALLDIR..."
-umount ${BOOTSTRAP_DIR}/mnt
 
 touch "${INSTALLDIR}/.prepared_base"

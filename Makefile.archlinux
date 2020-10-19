@@ -50,6 +50,9 @@ ifneq ($(DEBUG),0)
   $(info ║ Repository Variables)
   $(info ╠───────────────────────────────────────────────────────────────────────────────)
   $(info ║ UPDATE_REPO:           $(UPDATE_REPO))            #
+  $(info ║ TARGET_REPO:           $(TARGET_REPO))            #
+  $(info ║ SNAPSHOT_REPO:         $(SNAPSHOT_REPO))          #
+  $(info ║ SNAPSHOT_FILE:         $(SNAPSHOT_FILE))          #
   $(info ║ REPO_PROXY:            $(REPO_PROXY))             #
   $(info ║ ARCHLINUX_SRC_PREFIX:  $(ARCHLINUX_SRC_PREFIX))   # http://mirrors.kernel.org/archlinux
   $(info ║ ARCHLINUX_REL_VERSION: $(ARCHLINUX_REL_VERSION))  #
@@ -132,13 +135,14 @@ dist-copy-out:
 	@echo "--> Done:" >&3
 	@set -e;\
 	shopt -s nullglob;\
+	mkdir -p $(ORIG_SRC)/$(OUTPUT_DIR);\
 	echo -n > $(pkg_list_path);\
 	for arch_chroot_dir in $(CHROOT_DIR)/$(DIST_SRC)/; do\
-		arch_pkg_dir=$(ORIG_SRC)/$(OUTPUT_DIR)/pkgs;\
+		arch_pkg_dir=$(ORIG_SRC)/$(OUTPUT_DIR);\
 		mkdir -p $$arch_pkg_dir;\
 		for pkg in $$arch_chroot_dir/*.pkg.tar.*; do\
 			echo "      $$arch_pkg_dir/`basename $$pkg`" >&3 ;\
-			echo "$(OUTPUT_DIR)/`basename $$arch_chroot_dir`/`basename $$pkg`" >> $(pkg_list_path);\
+			echo "$(OUTPUT_DIR)/`basename $$pkg`" >> $(pkg_list_path);\
 		done;\
 		mkdir -p $(BUILDER_REPO_DIR)/pkgs;\
 		ln -f -t $(BUILDER_REPO_DIR)/pkgs $$arch_chroot_dir/*.pkg.tar.*;\
@@ -150,13 +154,12 @@ dist-copy-out:
 # Sign packages
 sign: sign_client = $(if $(GNUPG),$(GNUPG),gpg)
 sign:
-	@if [ -d $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs ]; then \
-		cd $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs; \
+	@if [ -d $(ORIG_SRC)/$(OUTPUT_DIR) ]; then \
+		cd $(ORIG_SRC)/$(OUTPUT_DIR); \
 		for filename in *.pkg.tar.zst; do\
-			if [ -e $$filename ]; then \
-				$(sign_client) --yes --detach-sign -o "$$filename.sig" "$$filename";\
-				ln -f -t $(BUILDER_REPO_DIR)/pkgs "$$filename.sig";\
-			fi; \
+			echo $$filename; \
+			$(sign_client) --yes --local-user "$(SIGN_ARCHLINUX_KEY)" --detach-sign -o "$$filename.sig" "$$filename";\
+			ln -f -t $(BUILDER_REPO_DIR)/pkgs "$$filename.sig";\
 		done; \
 	fi
 
@@ -165,17 +168,36 @@ sign:
 # requested repository (UPDATE_REPO)
 update-repo:
 ifndef UPDATE_REPO
-       $(error "You need to specify destination repo in UPDATE_REPO variable")
+	$(error "You need to specify destination repo in UPDATE_REPO variable")
 endif
 ifeq (,$(PACKAGE_LIST))
 	@true
 else
+ifdef SNAPSHOT_FILE
+	@echo -n > $(SNAPSHOT_FILE)
+endif
 	mkdir -p $(UPDATE_REPO)/pkgs; \
-	for arch_build_dir in $(ARCH_BUILD_DIRS); do\
-		pkgnames=`cat $(ORIG_SRC)/$$arch_build_dir/PKGBUILD | grep pkgname | cut -d "=" -f 2 | tr -d '()"'`;\
-			for pkgname in $$pkgnames; do\
-				ln -f $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs/$$pkgname-*.pkg.tar.zst $(UPDATE_REPO)/pkgs/;\
-				ln -f $(ORIG_SRC)/$(OUTPUT_DIR)/pkgs/$$pkgname-*.pkg.tar.zst.sig $(UPDATE_REPO)/pkgs/;\
-			done;\
+	for package in $(PACKAGE_LIST); do\
+		cd $(ORIG_SRC); \
+		pkgnames=`cat $(OUTPUT_DIR)/$$package.list`;\
+		for pkgname in $$pkgnames; do\
+			ln -f $$pkgname $(UPDATE_REPO)/pkgs/;\
+			ln -f $$pkgname.sig $(UPDATE_REPO)/pkgs/;\
+			if [ -n "$(SNAPSHOT_FILE)" ]; then \
+				echo $$pkgname >> "$(SNAPSHOT_FILE)"; \
+			fi; \
+		done; \
 	done
 endif
+
+
+update-repo-from-snapshot: packages = $(shell cat $(SNAPSHOT_FILE) 2>/dev/null)
+update-repo-from-snapshot:
+ifndef UPDATE_REPO
+	$(error "You need to specify destination repo in UPDATE_REPO variable")
+endif
+	mkdir -p $(UPDATE_REPO)/pkgs; \
+	for f in $(packages); do \
+		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f` $(UPDATE_REPO)/pkgs/ || exit 1; \
+		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f`.sig $(UPDATE_REPO)/pkgs/ || exit 1; \
+	done
