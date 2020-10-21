@@ -158,7 +158,7 @@ sign:
 		cd $(ORIG_SRC)/$(OUTPUT_DIR); \
 		for filename in *.pkg.tar.zst; do\
 			echo $$filename; \
-			$(sign_client) --yes --local-user "$(SIGN_ARCHLINUX_KEY)" --detach-sign -o "$$filename.sig" "$$filename";\
+			$(sign_client) --yes --local-user "$(ARCHLINUX_SIGN_KEY)" --detach-sign -o "$$filename.sig" "$$filename";\
 			ln -f -t $(BUILDER_REPO_DIR)/pkgs "$$filename.sig";\
 		done; \
 	fi
