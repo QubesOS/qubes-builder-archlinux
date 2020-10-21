@@ -178,11 +178,10 @@ ifdef SNAPSHOT_FILE
 endif
 	mkdir -p $(UPDATE_REPO)/pkgs; \
 	for package in $(PACKAGE_LIST); do\
-		cd $(ORIG_SRC); \
-		pkgnames=`cat $(OUTPUT_DIR)/$$package.list`;\
+		pkgnames=`cat $(ORIG_SRC)/$(OUTPUT_DIR)/$$package.list`;\
 		for pkgname in $$pkgnames; do\
-			ln -f $$pkgname $(UPDATE_REPO)/pkgs/;\
-			ln -f $$pkgname.sig $(UPDATE_REPO)/pkgs/;\
+			ln -f $(ORIG_SRC)/$$pkgname $(UPDATE_REPO)/pkgs/ || exit 1;\
+			ln -f $(ORIG_SRC)/$$pkgname.sig $(UPDATE_REPO)/pkgs/ || exit 1;\
 			if [ -n "$(SNAPSHOT_FILE)" ]; then \
 				echo $$pkgname >> "$(SNAPSHOT_FILE)"; \
 			fi; \
