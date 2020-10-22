@@ -18,7 +18,7 @@ su -c "echo 'Include = /etc/pacman.d/mirrorlist' >> $INSTALLDIR/etc/pacman.conf"
 echo "  --> Updating Qubes custom repository..."
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.*`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
+    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.zst`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
@@ -37,19 +37,13 @@ echo "  --> Checking available qubes packages (for debugging only)..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Ss qubes"
 
-echo "  --> Installing qubes packages..."
+echo "  --> Installing mandatory qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-xen"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-core"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-dependencies"
 
-echo "  --> Finishing installation of qubes packages..."
+echo "  --> Installing recommended qubes apps"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-gui qubes-vm-pulseaudio"
-
-echo "  --> Installing qubes apps"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-gpg-split qubes-usb-proxy"
+    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-recommended"
 
 echo "  --> Copying binary repository keyring package"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
