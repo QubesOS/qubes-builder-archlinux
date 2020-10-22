@@ -33,4 +33,4 @@ unset PACMAN_CACHE_DIR
     "pacman --noconfirm -Scc"
 
 echo " --> Cleaning /etc/resolv.conf"
-rm -f /etc/resolv.conf
+rm -f "${INSTALLDIR}/etc/resolv.conf"
