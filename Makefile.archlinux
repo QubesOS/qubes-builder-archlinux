@@ -181,7 +181,7 @@ endif
 		pkgnames=`cat $(ORIG_SRC)/$(OUTPUT_DIR)/$$package.list`;\
 		for pkgname in $$pkgnames; do\
 			ln -f $(ORIG_SRC)/$$pkgname $(UPDATE_REPO)/pkgs/ || exit 1;\
-			ln -f $(ORIG_SRC)/$$pkgname.sig $(UPDATE_REPO)/pkgs/ || exit 1;\
+			ln -f $(ORIG_SRC)/$$pkgname.sig $(UPDATE_REPO)/pkgs/ 2>/dev/null;\
 			if [ -n "$(SNAPSHOT_FILE)" ]; then \
 				echo $$pkgname >> "$(SNAPSHOT_FILE)"; \
 			fi; \
@@ -198,7 +198,7 @@ endif
 	mkdir -p $(UPDATE_REPO)/pkgs; \
 	for f in $(packages); do \
 		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f` $(UPDATE_REPO)/pkgs/ || exit 1; \
-		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f`.sig $(UPDATE_REPO)/pkgs/ || exit 1; \
+		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f`.sig $(UPDATE_REPO)/pkgs/ 2>/dev/null; \
 	done
 
 check-repo: pkg_list_path = $(ORIG_SRC)/$(OUTPUT_DIR)/$(firstword $(PACKAGE_LIST)).list
