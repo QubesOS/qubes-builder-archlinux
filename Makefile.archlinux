@@ -200,3 +200,16 @@ endif
 		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f` $(UPDATE_REPO)/pkgs/ || exit 1; \
 		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f`.sig $(UPDATE_REPO)/pkgs/ || exit 1; \
 	done
+
+check-repo: pkg_list_path = $(ORIG_SRC)/$(OUTPUT_DIR)/$(firstword $(PACKAGE_LIST)).list
+check-repo: packages = $(shell cat $(pkg_list_path) < /dev/null)
+check-repo:
+ifndef UPDATE_REPO
+	$(error "You need to specify destination repo in UPDATE_REPO variable")
+endif
+	@if [ -n "$(strip $(packages))" ]; then \
+	    cd $(ORIG_SRC) && ls $(addprefix $(UPDATE_REPO)/pkgs/, $(notdir $(packages))) >/dev/null 2>&1 || exit 1; \
+	else \
+	    echo "`tput bold`No packages defined by $(PACKAGE_LIST), syntax error?`tput sgr0`"; \
+	    exit 1; \
+	fi
