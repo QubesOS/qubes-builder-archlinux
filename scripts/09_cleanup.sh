@@ -34,3 +34,7 @@ unset PACMAN_CACHE_DIR
 
 echo " --> Cleaning /etc/resolv.conf"
 rm -f "${INSTALLDIR}/etc/resolv.conf"
+cat > "${INSTALLDIR}/etc/resolv.conf" << EOF
+# This file intentionally left blank
+
+EOF
