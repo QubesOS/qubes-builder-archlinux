@@ -8,7 +8,9 @@ PACMAN_CUSTOM_REPO_DIR="${PWD}/pkgs-for-template/${DIST}"
 export PACMAN_CACHE_DIR PACMAN_CUSTOM_REPO_DIR
 
 set -e
-[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
+if [ "$VERBOSE" -ge 2 ] || [ "$DEBUG" -gt 0 ]; then
+    set -x
+fi
 
 echo "  --> Enabling x86 repos..."
 su -c "echo '[multilib]' >> $INSTALLDIR/etc/pacman.conf"
@@ -17,13 +19,17 @@ su -c "echo 'Include = /etc/pacman.d/mirrorlist' >> $INSTALLDIR/etc/pacman.conf"
 
 echo "  --> Updating Qubes custom repository..."
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
+# shellcheck disable=SC2016
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.zst`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
+# shellcheck disable=SC2016
 su -c 'echo "[qubes] " >> $INSTALLDIR/etc/pacman.conf'
+# shellcheck disable=SC2016
 su -c 'echo "SigLevel = Optional TrustAll " >> $INSTALLDIR/etc/pacman.conf'
+# shellcheck disable=SC2016
 su -c 'echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " >> $INSTALLDIR/etc/pacman.conf' 
 
 echo "  --> Synchronize resolv.conf..."
