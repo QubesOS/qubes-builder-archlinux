@@ -95,7 +95,7 @@ dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 	@mkdir -p "$(BUILDER_REPO_DIR)/pkgs"
 	@if ! [ -d "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo/pkgs" ]; then\
 		echo "    --> sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";"; \
-		mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
+		mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo/pkgs";\
 		sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
 	fi
 	@echo "  --> Synchronize resolv.conf, in case it changed since last run..."
