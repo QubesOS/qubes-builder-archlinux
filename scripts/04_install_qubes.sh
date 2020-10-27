@@ -28,7 +28,7 @@ echo "  --> Registering Qubes custom repository..."
 # shellcheck disable=SC2016
 su -c 'echo "[qubes] " >> $INSTALLDIR/etc/pacman.conf'
 # shellcheck disable=SC2016
-su -c 'echo "SigLevel = Optional TrustAll " >> $INSTALLDIR/etc/pacman.conf'
+su -c 'echo "SigLevel = Never " >> $INSTALLDIR/etc/pacman.conf'
 # shellcheck disable=SC2016
 su -c 'echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " >> $INSTALLDIR/etc/pacman.conf' 
 
@@ -87,5 +87,5 @@ echo 'LANG=en_US.UTF-8' > "${INSTALLDIR}/etc/locale.conf"
 mkdir -p "${INSTALLDIR}/lib/modules"
 touch "${INSTALLDIR}/lib/modules/QUBES_NODELETE"
 
-# Disable qubes local repository
+# Remove qubes local repository definition
 sed '/\[qubes]/,+2 d' -i "${INSTALLDIR}/etc/pacman.conf"
