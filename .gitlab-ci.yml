@@ -1,0 +1,49 @@
+include:
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.1/gitlab-base.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.1/gitlab-vm-archlinux.yml'
+
+default:
+  tags:
+    - vm-runner
+    - long-living-job
+
+after_script:
+  - ls -l ~/qubes-builder/qubes-src/linux-template-builder/rpm/noarch
+
+variables:
+  COMPONENTS: linux-template-builder
+  
+prep:sources:
+  extends: .components_prepare
+  variables:
+    COMPONENTS: "linux-template-builder core-vchan-xen app-linux-split-gpg"
+
+tests:vm-archlinux:no-deps:
+  extends: .components_build
+  stage: tests
+  needs:
+    - prep:sources
+  tags:
+    - docker-runner
+    - short-living-job
+  variables:
+    DISTS_VM: archlinux
+    USE_QUBES_REPO_VERSION: "4.1"
+    USE_QUBES_REPO_TESTING: "1"
+    COMPONENTS: app-linux-split-gpg
+
+tests:vm-archlinux:with-qubes-deps:
+  extends: .components_build
+  stage: tests
+  needs:
+    - prep:sources
+  tags:
+    - docker-runner
+    - short-living-job
+  variables:
+    DIST_DOM0: archlinux
+    USE_QUBES_REPO_VERSION: "4.1"
+    USE_QUBES_REPO_TESTING: "1"
+    COMPONENTS: core-vchan-xen
