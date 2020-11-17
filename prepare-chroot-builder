@@ -75,4 +75,16 @@ SigLevel = Optional TrustAll
 Server = file:///tmp/qubes-packages-mirror-repo/pkgs
 EOF
 
+    if [ -n "$USE_QUBES_REPO_VERSION" ]; then
+        cat "${ARCHLINUX_PLUGIN_DIR}/repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALLDIR}/etc/pacman.conf"
+        if [ "0$USE_QUBES_REPO_TESTING" -gt 0 ]; then
+            cat "${ARCHLINUX_PLUGIN_DIR}repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf" \
+                >> "${INSTALLDIR}/etc/pacman.conf"
+        fi
+        "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --add - < \
+            "${ARCHLINUX_PLUGIN_DIR}keys/qubes-repo-archlinux-key.asc"
+        key_fpr=$(gpg --with-colons --show-key "${ARCHLINUX_PLUGIN_DIR}keys/qubes-repo-archlinux-key.asc" |\
+                grep ^fpr: | cut -d : -f 10)
+        "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --lsign "$key_fpr"
+    fi
 fi
