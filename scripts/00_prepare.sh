@@ -7,7 +7,6 @@ ARCHLINUX_SRC_PREFIX="${ARCHLINUX_SRC_PREFIX:-http://mirrors.kernel.org/archlinu
 BOOTSTRAP_TARBALL=$(wget -qO- "$ARCHLINUX_SRC_PREFIX"/iso/latest/sha1sums.txt | grep -o "archlinux-bootstrap-[0-9.]*-x86_64.tar.gz")
 
 BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/latest/${BOOTSTRAP_TARBALL}"
-GPG_ENV="GNUPGHOME=${CACHEDIR}/gpghome"
 
 [ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 
@@ -20,11 +19,12 @@ http_proxy="$REPO_PROXY" wget -N -P "$CACHEDIR" "${BOOTSTRAP_URL}.sig"
 
 echo "  --> Preparing GnuPG to verify tarball..."
 mkdir -p "${CACHEDIR}/gpghome"
+touch "${CACHEDIR}/gpghome/pubring.gpg"
 chmod -R go-rwx "${CACHEDIR}/gpghome"
-env "$GPG_ENV" gpg --import "${ARCHLINUX_PLUGIN_DIR}/keys/archlinux-master-keys.asc" || exit
+gpg --keyring "${CACHEDIR}/gpghome/pubring.gpg" --import "${ARCHLINUX_PLUGIN_DIR}/keys/archlinux-master-keys.asc" || exit
 
 echo "  --> Verifying tarball..."
-env "$GPG_ENV" gpg --verify "${CACHEDIR}/${BOOTSTRAP_TARBALL}.sig" "${CACHEDIR}/${BOOTSTRAP_TARBALL}" || exit
+gpg --keyring "${CACHEDIR}/gpghome/pubring.gpg" --verify "${CACHEDIR}/${BOOTSTRAP_TARBALL}.sig" "${CACHEDIR}/${BOOTSTRAP_TARBALL}" || exit
 
 if [ "${CACHEDIR}/${BOOTSTRAP_TARBALL}" -nt "${CACHEDIR}/bootstrap/.extracted" ]; then
     echo "  --> Extracting bootstrap tarball (nuking previous directory)..."
