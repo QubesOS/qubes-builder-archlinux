@@ -81,6 +81,6 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
         cat repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf \
             >> "${INSTALLDIR}/etc/pacman.conf"
     fi
-    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --add - < \
-        keys/qubes-repo-archlinux-key.asc
+    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --add - < keys/qubes-repo-archlinux-key.asc
+fi
 fi
