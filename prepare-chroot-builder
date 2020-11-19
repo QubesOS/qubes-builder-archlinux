@@ -76,7 +76,7 @@ Server = file:///tmp/qubes-packages-mirror-repo/pkgs
 EOF
 
 if [ -n "$USE_QUBES_REPO_VERSION" ]; then
-    cat "${ARCHLINUX_PLUGIN_DIR}/repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALLDIR}/etc/pacman.conf"
+    # cat "${ARCHLINUX_PLUGIN_DIR}/repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALLDIR}/etc/pacman.conf"
     if [ "0$USE_QUBES_REPO_TESTING" -gt 0 ]; then
         cat "${ARCHLINUX_PLUGIN_DIR}repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf" \
             >> "${INSTALLDIR}/etc/pacman.conf"
