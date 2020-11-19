@@ -13,12 +13,12 @@ after_script:
   - ls -l ~/qubes-builder/qubes-src/linux-template-builder/rpm/noarch
 
 variables:
-  COMPONENTS: linux-template-builder
+  COMPONENTS: "meta-packages linux-template-builder"
   
 prep:sources:
   extends: .components_prepare
   variables:
-    COMPONENTS: "linux-template-builder core-vchan-xen app-linux-split-gpg"
+    COMPONENTS: "linux-template-builder core-vchan-xen app-linux-split-gpg meta-packages"
 
 tests:vm-archlinux:no-deps:
   extends: .components_build
