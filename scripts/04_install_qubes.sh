@@ -43,6 +43,27 @@ echo "  --> Checking available qubes packages (for debugging only)..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Ss qubes"
 
+if [ -n "$USE_QUBES_REPO_VERSION" ]; then
+    # we don't check specific value here, assume correct branch of
+    # meta-packages component
+    echo "  --> Installing repository qubes package..."
+    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+        "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-repo"
+    if [ "0$USE_QUBES_REPO_TESTING" -gt 0 ]; then
+        echo "  --> Enabling current-testing repository..."
+        ln -s "90-qubes-${USE_QUBES_REPO_VERSION}-current-testing.conf.disabled" \
+            "$INSTALLDIR/etc/pacman.d/90-qubes-${USE_QUBES_REPO_VERSION}-current-testing.conf"
+        # abort if the file doesn't exist
+        if ! [ -f "$INSTALLDIR/etc/pacman.d/90-qubes-${USE_QUBES_REPO_VERSION}-current-testing.conf" ]; then
+            ls -l "$INSTALLDIR/etc/pacman.d/"
+            exit 1
+        fi
+    fi
+    echo "  --> Updating pacman sources..."
+    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+        "http_proxy='${REPO_PROXY}' pacman -Sy"
+fi
+
 echo "  --> Installing mandatory qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-dependencies"
