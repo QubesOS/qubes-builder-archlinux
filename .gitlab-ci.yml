@@ -2,7 +2,9 @@ include:
   - project: 'QubesOS/qubes-continuous-integration'
     file: '/r4.1/gitlab-base.yml'
   - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-vm-archlinux.yml'
+    file: '/r4.1/gitlab-vm-archlinux-chroot.yml'
+  - project: 'QubesOS/qubes-continuous-integration'
+    file: '/r4.1/gitlab-vm-archlinux-build-template.yml'
 
 default:
   tags:
@@ -25,6 +27,7 @@ tests:vm-archlinux:no-deps:
   stage: tests
   needs:
     - prep:sources
+    - chroot:vm-archlinux
   tags:
     - docker-runner
     - short-living-job
@@ -39,6 +42,7 @@ tests:vm-archlinux:with-qubes-deps:
   stage: tests
   needs:
     - prep:sources
+    - chroot:vm-archlinux
   tags:
     - docker-runner
     - short-living-job
