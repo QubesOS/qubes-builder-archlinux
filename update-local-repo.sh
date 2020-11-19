@@ -10,13 +10,9 @@ PKGS_DIR="${BUILDER_REPO_DIR}/pkgs"
 
 mkdir -p "$PKGS_DIR"
 if [ ! -f "${PKGS_DIR}/qubes.db" ]; then
-    # pacman does not deal correctly with empty repositories
-    echo "  -> Repo '${PKGS_DIR}' appears empty; initialising with pacman itself..."
-    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/pacman*.pkg.tar.* "${PKGS_DIR}/"
-    cp "${CHROOT_DIR}/var/cache/pacman/pkg"/sudo*.pkg.tar.* "${PKGS_DIR}/"
-    cp "${CACHEDIR}/pacman_cache/pkg"/pacman*.pkg.tar.* "${PKGS_DIR}/"
-    cp "${CACHEDIR}/pacman_cache/pkg"/sudo*.pkg.tar.* "${PKGS_DIR}/"
-
+    echo "  -> Repo '${PKGS_DIR}' appears empty; initialising..."
+    env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
+        'cd /tmp/qubes-packages-mirror-repo; repo-add pkgs/qubes.db.tar.gz;'
 fi
 
 set -e
