@@ -60,6 +60,16 @@ ifneq ($(DEBUG),0)
   $(info ╚═══════════════════════════════════════════════════════════════════════════════)
 endif
 
+define bin_packages
+	$(shell cd $(ORIG_SRC) && \
+            if [ 0`stat -c %Y $(OUTPUT_DIR)/$(notdir $(1)).list 2>/dev/null` -ge \
+                    0`git log -1 --pretty=format:%ct` ]; then \
+                cat $(OUTPUT_DIR)/$(notdir $(1)).list; \
+            else \
+                echo unknown.package; \
+            fi)
+endef
+
 ### Targets required by Makefile.generic to build packages:
 
 # dist-prepare-chroot - initial preparation of chroot environment
@@ -201,8 +211,7 @@ endif
 		ln -f $(subst /$(TARGET_REPO)/,/$(SNAPSHOT_REPO)/,$(UPDATE_REPO)/)pkgs/`basename $$f`.sig $(UPDATE_REPO)/pkgs/ 2>/dev/null; \
 	done
 
-check-repo: pkg_list_path = $(ORIG_SRC)/$(OUTPUT_DIR)/$(firstword $(PACKAGE_LIST)).list
-check-repo: packages = $(shell cat $(pkg_list_path) < /dev/null)
+check-repo: packages = $(foreach pkg,$(PACKAGE_LIST),$(call bin_packages,$(pkg)))
 check-repo:
 ifndef UPDATE_REPO
 	$(error "You need to specify destination repo in UPDATE_REPO variable")
