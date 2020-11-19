@@ -83,5 +83,7 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     fi
     "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --add - < \
         "${ARCHLINUX_PLUGIN_DIR}keys/qubes-repo-archlinux-key.asc"
+    # Trust Qubes Archlinux key
+    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --lsign-key CEDF003D544CCD1D1382E9138A871A1BBD7093EA
 fi
 fi
