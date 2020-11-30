@@ -72,7 +72,7 @@ cat >> "${INSTALLDIR}/etc/fstab" <<EOF
 
 # Template Customizations
 tmpfs                   /dev/shm                                    tmpfs   defaults,size=1G            0 0
-tmpfs                   /etc/pacman.d/gnupg/private-keys-v1.d       tmpfs   defaults,noexec,mode=600    0 0
+tmpfs                   /etc/pacman.d/gnupg/private-keys-v1.d       tmpfs   defaults,noexec,nosuid,nodev,mode=600    0 0
 
 EOF
 
