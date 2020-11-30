@@ -50,8 +50,8 @@ sed "s|#Server = ${PACMAN_MIRROR}/|Server = ${PACMAN_MIRROR}/|" \
 cp /etc/resolv.conf "${BOOTSTRAP_DIR}/etc/"
 
 echo "  --> Initializing pacman keychain..."
-"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/pacman-key --init
-"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/pacman-key --populate
+"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
+    "pacman-key --init && pacman-key --populate"
 
 echo "  --> Installing core pacman packages..."
 export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
