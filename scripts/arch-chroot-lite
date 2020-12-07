@@ -31,6 +31,11 @@ chroot_setup() {
     mkdir -p -m 0755 -- "${secret_key_dir%/*}" &&
     mkdir -m 0000 -- "$secret_key_dir" &&
 
+    # Set the correct permissions for mount points
+    chmod -- 0755 "$1/dev" "$1/run" &&
+    chmod -- 0555 "$1/proc" "$1/sys" &&
+    chmod -- 1777 "$q/tmp" &&
+
     chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
     chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
     # arch-chroot-lite will never have occasion to use efivars, so don't bother
