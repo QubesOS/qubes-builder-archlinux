@@ -28,7 +28,8 @@ chroot_setup() {
     secret_key_dir="$1/etc/pacman.d/gnupg/private-keys-v1.d" &&
 
     # private-keys-v1.d does not exist before we create the tmpfs
-    mkdir -p "$1/etc/pacman.d/gnupg/private-keys-v1.d"
+    mkdir -p -m 0755 -- "${secret_key_dir%/*}" &&
+    mkdir -m 0000 -- "$secret_key_dir" &&
 
     chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
     chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
