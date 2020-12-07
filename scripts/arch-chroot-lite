@@ -22,6 +22,11 @@ chroot_setup() {
     # arch-chroot-lite drops the conditional bind mount on the chroot path, as
     # it seemed to shadow mounts set up before arch-chroot was invoked
 
+    # This directory stores secret GPG keys, so its contents must be kept secret
+    # at all costs.  Anyone with access to the files in it can compromise the
+    # built TemplateVM and all VMs based on it.
+    secret_key_dir="$1/etc/pacman.d/gnupg/private-keys-v1.d" &&
+
     # private-keys-v1.d does not exist before we create the tmpfs
     mkdir -p "$1/etc/pacman.d/gnupg/private-keys-v1.d"
 
@@ -34,7 +39,7 @@ chroot_setup() {
     chroot_add_mount shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev &&
     chroot_add_mount run "$1/run" -t tmpfs -o nosuid,nodev,mode=0755 &&
     chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid &&
-    chroot_add_mount pacman-privkeys "$1/etc/pacman.d/gnupg/private-keys-v1.d" -t tmpfs -o mode=600,nosuid,noexec,nodev ||
+    chroot_add_mount pacman-privkeys "$secret_key_dir" -t tmpfs -o mode=000,nosuid,noexec,nodev ||
     exit
     if [[ -d "$PACMAN_CACHE_DIR" ]]; then
         PACMAN_CACHE_MOUNT_DIR="${PACMAN_CACHE_MOUNT_DIR:-$1/var/cache/pacman}"
