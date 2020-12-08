@@ -34,7 +34,44 @@ chroot_setup() {
     # Set the correct permissions for mount points
     chmod -- 0755 "$1/dev" "$1/run" &&
     chmod -- 0555 "$1/proc" "$1/sys" &&
-    chmod -- 1777 "$q/tmp" &&
+    chmod -- 1777 "$1/tmp" &&
+
+    # Create README
+    cat > "$secret_key_dir/README" <<'EOF' &&
+# Why is this directory immutable?
+
+In QubesOS, a TemplateVM’s root volume is readable by all AppVMs based on it.
+Therefore, it cannot be used to store secret data.
+
+Pacman relies on the secrecy of its master key, which is normally stored in
+`/etc/pacman.d/gnupg/private-keys-v1.d`.  Anyone who has this key can sign
+packages that Pacman will accept.  Therefore, this key must not be stored on the
+root volume.  Furthermore, a user might (quite reasonably) assume that there is
+no sensitive information on a TemplateVM’s private volume unless they have added
+it explicitly.  So the master key cannot be stored there either.
+
+The only remaining option is to use an ephemeral key that is only kept in
+memory.  That is what QubesOS does: during the build process, a ramfs is mounted
+over /etc/pacman.d/gnupg/private-keys-v1.d, so that the secret key is kept in
+memory.  When the ramfs is unmounted, the key is destroyed along with it.
+
+There is one remaining problem: relying on a mount point is not fail-safe.  If
+the ramfs fails to mount, or if the user later runs operations like
+`pacman-key --init`, a new master key will be generated.  It will later be
+leaked to AppVMs based on this template.
+
+To prevent this potentially disasterous failure, QubesOS marks the directory as
+immutable.  This ensures that nobody (not even root) can create any files in it.
+When GPG tries to write its secret key to disk, it will fail, preventing any
+leakage.
+
+P.S.: Why a ramfs and not a tmpfs?  Data on a ramfs can never be paged out to
+disk, which ensures that this key is never leaked to swap partitions.  GPG
+internally locks its memory into RAM to prevent similar problems.
+EOF
+    # Mark private-keys-v1.d immutable, so that files (such as secret keys)
+    # cannot accidentally be created in it.
+    chattr -R +i -- "$secret_key_dir" &&
 
     chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
     chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
@@ -45,7 +82,8 @@ chroot_setup() {
     chroot_add_mount shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev &&
     chroot_add_mount run "$1/run" -t tmpfs -o nosuid,nodev,mode=0755 &&
     chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid &&
-    chroot_add_mount pacman-privkeys "$secret_key_dir" -t tmpfs -o mode=000,nosuid,noexec,nodev ||
+    # See the README above for why this is a ramfs
+    chroot_add_mount pacman-privkeys "$secret_key_dir" -t ramfs -o mode=000,nosuid,noexec,nodev ||
     exit
     if [[ -d "$PACMAN_CACHE_DIR" ]]; then
         PACMAN_CACHE_MOUNT_DIR="${PACMAN_CACHE_MOUNT_DIR:-$1/var/cache/pacman}"
