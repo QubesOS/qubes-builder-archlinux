@@ -29,7 +29,7 @@ chroot_setup() {
 
     # private-keys-v1.d does not exist before we create the tmpfs
     mkdir -p -m 0755 -- "${secret_key_dir%/*}" &&
-    mkdir -m 0000 -- "$secret_key_dir" &&
+    mkdir -p -m 0000 -- "$secret_key_dir" &&
 
     # Set the correct permissions for mount points
     chmod -- 0755 "$1/dev" "$1/run" &&
@@ -37,7 +37,7 @@ chroot_setup() {
     chmod -- 1777 "$1/tmp" &&
 
     # Create README
-    cat > "$secret_key_dir/README" <<'EOF' &&
+    [[ -f "$secret_key_dir/README" ]] || cat > "$secret_key_dir/README" <<'EOF' &&
 # Why is this directory immutable?
 
 In QubesOS, a TemplateVM’s root volume is readable by all AppVMs based on it.
