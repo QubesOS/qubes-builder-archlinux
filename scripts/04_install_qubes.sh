@@ -72,10 +72,6 @@ echo "  --> Installing recommended qubes apps"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-recommended"
 
-echo "  --> Copying binary repository keyring package"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "cp /tmp/qubes-packages-mirror-repo/pkgs/qubes-vm-keyring*.pkg.tar.* /etc/pacman.d/"
-
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
 #
