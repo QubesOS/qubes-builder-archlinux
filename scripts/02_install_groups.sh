@@ -25,6 +25,10 @@ export PACMAN_CACHE_DIR
 echo "  --> Synchronize resolv.conf..."
 cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 
+echo "  --> Updating installed packages..."
+"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+    "http_proxy='${REPO_PROXY}' pacman -Syu --noconfirm"
+
 echo "  --> Installing archlinux package groups..."
 echo "    --> Selected packages: ${PKGGROUPS}"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
