@@ -70,8 +70,10 @@ disk, which ensures that this key is never leaked to swap partitions.  GPG
 internally locks its memory into RAM to prevent similar problems.
 EOF
     # Mark private-keys-v1.d immutable, so that files (such as secret keys)
-    # cannot accidentally be created in it.
-    chattr -R +i -- "$secret_key_dir" &&
+    # cannot accidentally be created in it. But skip this part when running in
+    # a disposable CI environment (as it's incompatible with running within
+    # docker and with tar-ing pre-made chroot).
+    [ "$CI_DISPOSABLE_ENVIRONMENT" = "true" ] || chattr -R +i -- "$secret_key_dir" &&
 
     chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
     chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
