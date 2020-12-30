@@ -18,7 +18,7 @@ DIST_BUILD_DIR = /home/user
 ### Local variables
 RUN_AS_USER = user
 
-PACMAN_MIRROR ?= http://mirror.rackspace.com
+ARCHLINUX_MIRROR ?= http://mirror.rackspace.com
 
 
 DEBUG ?= 0
@@ -56,7 +56,7 @@ ifneq ($(DEBUG),0)
   $(info ║ REPO_PROXY:            $(REPO_PROXY))             #
   $(info ║ ARCHLINUX_SRC_PREFIX:  $(ARCHLINUX_SRC_PREFIX))   # http://mirrors.kernel.org/archlinux
   $(info ║ ARCHLINUX_REL_VERSION: $(ARCHLINUX_REL_VERSION))  #
-  $(info ║ PACMAN_MIRROR:         $(PACMAN_MIRROR))          # mirror.rackspace.com
+  $(info ║ ARCHLINUX_MIRROR:      $(ARCHLINUX_MIRROR))       # mirror.rackspace.com
   $(info ╚═══════════════════════════════════════════════════════════════════════════════)
 endif
 

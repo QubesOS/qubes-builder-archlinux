@@ -33,7 +33,7 @@ if [ "${CACHEDIR}/${BOOTSTRAP_TARBALL}" -nt "${CACHEDIR}/bootstrap/.extracted" ]
     # By default will extract to a "root.x86_64" directory; strip that off
     tar xzC "${CACHEDIR}/bootstrap" --strip-components=1 -f "${CACHEDIR}/${BOOTSTRAP_TARBALL}"
     # Copy the distribution-provided version to be rewritten based on the
-    # value of $PACMAN_MIRROR each run (by the Makefile)
+    # value of $ARCHLINUX_MIRROR each run (by the Makefile)
     cp -a "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist" "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist.dist"
     touch "${CACHEDIR}/bootstrap/.extracted"
 else
