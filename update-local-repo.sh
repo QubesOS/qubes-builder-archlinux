@@ -31,6 +31,10 @@ env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
 env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
     'sed "s/^ *CheckSpace/#CheckSpace/g" -i /etc/pacman.conf'
 
+# Make sure that the archlinux keyring is populated
+env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
+     pacman-key --populate archlinux
+
 # Update archlinux keyring first so that Archlinux can be updated even after a long time
 env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Sy --noconfirm archlinux-keyring"
