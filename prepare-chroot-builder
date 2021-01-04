@@ -15,6 +15,11 @@ export INSTALLDIR SCRIPTSDIR
 PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
 export PACMAN_CACHE_DIR
 
+# do not make volatile private key dir for the package builds themselves
+# this is interpreted by scripts/arch-chroot-lite
+SKIP_VOLATILE_SECRET_KEY_DIR=true
+export SKIP_VOLATILE_SECRET_KEY_DIR
+
 set -e
 [ "$VERBOSE" -ge 1 -o "$DEBUG" -gt 0 ] && echo "  --> INSTALLDIR: '$INSTALLDIR'"
 [ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x

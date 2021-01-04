@@ -15,6 +15,9 @@ chroot_add_mount() {
 }
 
 setup_volatile_secret_key_dir() {
+    if [ "$SKIP_VOLATILE_SECRET_KEY_DIR" = "true" ]; then
+        return
+    fi
 
     # This directory stores secret GPG keys, so its contents must be kept secret
     # at all costs. Anyone with access to the files in it can compromise the
