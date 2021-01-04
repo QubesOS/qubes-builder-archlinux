@@ -14,27 +14,16 @@ chroot_add_mount() {
     mount "$@" && CHROOT_ACTIVE_MOUNTS=("$2" "${CHROOT_ACTIVE_MOUNTS[@]}")
 }
 
-chroot_setup() {
-    CHROOT_ACTIVE_MOUNTS=()
-    [[ $(trap -p EXIT) ]] && die '(BUG): attempting to overwrite existing EXIT trap'
-    trap 'chroot_teardown' EXIT
-
-    # arch-chroot-lite drops the conditional bind mount on the chroot path, as
-    # it seemed to shadow mounts set up before arch-chroot was invoked
+setup_volatile_secret_key_dir() {
 
     # This directory stores secret GPG keys, so its contents must be kept secret
-    # at all costs.  Anyone with access to the files in it can compromise the
+    # at all costs. Anyone with access to the files in it can compromise the
     # built TemplateVM and all VMs based on it.
     secret_key_dir="$1/etc/pacman.d/gnupg/private-keys-v1.d" &&
 
     # private-keys-v1.d does not exist before we create the tmpfs
     mkdir -p -m 0755 -- "${secret_key_dir%/*}" &&
     mkdir -p -m 0000 -- "$secret_key_dir" &&
-
-    # Set the correct permissions for mount points
-    chmod -- 0755 "$1/dev" "$1/run" &&
-    chmod -- 0555 "$1/proc" "$1/sys" &&
-    chmod -- 1777 "$1/tmp" &&
 
     # Create README
     [[ -f "$secret_key_dir/README" ]] || cat > "$secret_key_dir/README" <<'EOF' &&
@@ -70,10 +59,27 @@ disk, which ensures that this key is never leaked to swap partitions.  GPG
 internally locks its memory into RAM to prevent similar problems.
 EOF
     # Mark private-keys-v1.d immutable, so that files (such as secret keys)
-    # cannot accidentally be created in it. But skip this part when running in
-    # a disposable CI environment (as it's incompatible with running within
-    # docker and with tar-ing pre-made chroot).
-    [ "$CI_DISPOSABLE_ENVIRONMENT" = "true" ] || chattr -R +i -- "$secret_key_dir" &&
+    # cannot accidentally be created in it.
+    chattr -R +i -- "$secret_key_dir" &&
+
+    # See the README above for why this is a ramfs
+    chroot_add_mount pacman-privkeys "$secret_key_dir" -t ramfs -o mode=000,nosuid,noexec,nodev || exit
+}
+
+chroot_setup() {
+    CHROOT_ACTIVE_MOUNTS=()
+    [[ $(trap -p EXIT) ]] && die '(BUG): attempting to overwrite existing EXIT trap'
+    trap 'chroot_teardown' EXIT
+
+    # arch-chroot-lite drops the conditional bind mount on the chroot path, as
+    # it seemed to shadow mounts set up before arch-chroot was invoked
+
+    # Set the correct permissions for mount points
+    chmod -- 0755 "$1/dev" "$1/run" &&
+    chmod -- 0555 "$1/proc" "$1/sys" &&
+    chmod -- 1777 "$1/tmp" &&
+
+    setup_volatile_secret_key_dir &&
 
     chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
     chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
@@ -83,9 +89,8 @@ EOF
     chroot_add_mount devpts "$1/dev/pts" -t devpts -o mode=0620,gid=5,nosuid,noexec &&
     chroot_add_mount shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev &&
     chroot_add_mount run "$1/run" -t tmpfs -o nosuid,nodev,mode=0755 &&
-    chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid &&
-    # See the README above for why this is a ramfs
-    chroot_add_mount pacman-privkeys "$secret_key_dir" -t ramfs -o mode=000,nosuid,noexec,nodev ||
+    chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid ||
+
     exit
     if [[ -d "$PACMAN_CACHE_DIR" ]]; then
         PACMAN_CACHE_MOUNT_DIR="${PACMAN_CACHE_MOUNT_DIR:-$1/var/cache/pacman}"
