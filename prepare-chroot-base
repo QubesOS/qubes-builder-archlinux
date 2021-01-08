@@ -66,7 +66,7 @@ echo "  --> Initializing pacman keychain..."
 echo "  --> Installing core pacman packages..."
 export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
 "${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacstrap /mnt base"
+    "until ALL_PROXY='${REPO_PROXY}' pacstrap /mnt base; do sleep 0.1; done"
 unset PACMAN_CACHE_MOUNT_DIR
 
 touch "${INSTALLDIR}/.prepared_base"
