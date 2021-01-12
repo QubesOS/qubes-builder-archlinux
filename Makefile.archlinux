@@ -124,6 +124,10 @@ dist-prep:
 # dist-build-dep - install build dependencies (should operate on chroot directory)
 dist-build-dep:
 	@echo "--> Archlinux dist-build-dep (makefile)"
+	@echo "  --> Generate locales..."
+	@echo "en_US.UTF-8 UTF-8" | sudo tee -a $(CHROOT_DIR)/etc/locale.gen
+	@sudo $(CHROOT_ENV) chroot "$(CHROOT_DIR)" locale-gen
+	@echo "LANG=en_US.UTF-8" | sudo tee -a $(CHROOT_DIR)/etc/locale.conf
 	@sudo -E "$(ARCHLINUX_PLUGIN_DIR)/update-local-repo.sh" $(DIST)
 
 # dist-package - compile package (should operate on chroot directory)
