@@ -5,7 +5,7 @@ echo "--> Archlinux 04_install_qubes.sh"
 
 PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
 PACMAN_CUSTOM_REPO_DIR="${PWD}/pkgs-for-template/${DIST}"
-export PACMAN_CACHE_DIR PACMAN_CUSTOM_REPO_DIR
+export PACMAN_CACHE_DIR PACMAN_CUSTOM_REPO_DIR "ALL_PROXY=$REPO_PROXY"
 
 set -e
 if [ "$VERBOSE" -ge 2 ] || [ "$DEBUG" -gt 0 ]; then
@@ -16,6 +16,7 @@ echo "  --> Enabling x86 repos..."
 su -c "echo '[multilib]' >> $INSTALLDIR/etc/pacman.conf"
 su -c "echo 'SigLevel = PackageRequired' >> $INSTALLDIR/etc/pacman.conf"
 su -c "echo 'Include = /etc/pacman.d/mirrorlist' >> $INSTALLDIR/etc/pacman.conf"
+sudo sed -Ei 's,^#(Server *= *https://mirrors\.kernel\.org/),\1,' "$INSTALLDIR/etc/pacman.d/mirrorlist"
 
 echo "  --> Updating Qubes custom repository..."
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
@@ -37,11 +38,11 @@ cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 
 echo "  --> Updating pacman sources..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -Sy"
+    "until http_proxy='${REPO_PROXY}' pacman -Syu; do sleep 1; done"
 
 echo "  --> Checking available qubes packages (for debugging only)..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -Ss qubes"
+    "until http_proxy='${REPO_PROXY}' pacman -Ss qubes; do sleep 1; done"
 
 if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     # we don't check specific value here, assume correct branch of
@@ -61,16 +62,16 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     fi
     echo "  --> Updating pacman sources..."
     "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-        "http_proxy='${REPO_PROXY}' pacman -Sy"
+        "until http_proxy='${REPO_PROXY}' pacman -Syu; do sleep 1; done"
 fi
 
 echo "  --> Installing mandatory qubes packages..."
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-dependencies"
+    "until http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-dependencies; do sleep 1; done"
 
 echo "  --> Installing recommended qubes apps"
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-recommended"
+    "until http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-recommended; do sleep 1; done"
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
@@ -89,7 +90,9 @@ cat >> "${INSTALLDIR}/etc/fstab" <<EOF
 
 # Template Customizations
 tmpfs                   /dev/shm                                    tmpfs   defaults,size=1G            0 0
-tmpfs                   /etc/pacman.d/gnupg/private-keys-v1.d       tmpfs   defaults,noexec,nosuid,nodev,mode=600    0 0
+# This MUST be a ramfs, not a tmpfs!  The data here is incredibly sensitive
+# (allows root access) and must not be leaked to disk.
+tmpfs                   /etc/pacman.d/gnupg/private-keys-v1.d       ramfs   defaults,noexec,nosuid,nodev,mode=600    0 0
 
 EOF
 
