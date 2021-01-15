@@ -8,33 +8,39 @@ PKGS_DIR="${BUILDER_REPO_DIR}/pkgs"
 
 [ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 
+chroot_cmd() {
+    systemd-nspawn --directory="$CHROOT_DIR" \
+        --keep-unit \
+        --register=no \
+        --bind="${BUILDER_REPO_DIR}":"/tmp/qubes-packages-mirror-repo" \
+        --chdir=/tmp/qubes-packages-mirror-repo \
+        "$@"
+}
+
 mkdir -p "$PKGS_DIR"
 if [ ! -f "${PKGS_DIR}/qubes.db" ]; then
     echo "  -> Repo '${PKGS_DIR}' appears empty; initialising..."
-    env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
-        'cd /tmp/qubes-packages-mirror-repo; repo-add pkgs/qubes.db.tar.gz;'
+    chroot_cmd --user=user repo-add pkgs/qubes.db.tar.gz
 fi
 
 set -e
 
 # Remove local qubes packages signatures because pacman will only trust these
 # local packages if no signature is provided
-env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
-    'cd /tmp/qubes-packages-mirror-repo/pkgs && if [ -n "$(ls *.sig)" ] ; then rm *.sig ; fi'
+chroot_cmd --user=user /bin/sh -c 'if [ -n "$(ls *.sig)" ] ; then rm *.sig ; fi'
 
 # Generate custom repository metadata based on packages that are available
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
-env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/su user -c \
-    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.*`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
+chroot_cmd --user=user /bin/sh -c \
+    'for pkg in `ls -v pkgs/*.pkg.tar.*`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 
 # Ensure pacman doesn't check for disk free space -- it doesn't work in chroots
-env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
-    'sed "s/^ *CheckSpace/#CheckSpace/g" -i /etc/pacman.conf'
+chroot_cmd sed "s/^ *CheckSpace/#CheckSpace/g" -i /etc/pacman.conf
 
 # Update archlinux keyring first so that Archlinux can be updated even after a long time
-env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
+chroot_cmd /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Sy --noconfirm archlinux-keyring"
 
 # Now update system
-env $CHROOT_ENV chroot "$CHROOT_DIR" /bin/sh -c \
+chroot_cmd /bin/sh -c \
     "http_proxy='${REPO_PROXY}' pacman -Syu --noconfirm"

@@ -76,40 +76,13 @@ endef
 #   Specifically, load mounts for the build chroot
 dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 	@echo "--> Archlinux dist-prepare-chroot (makefile):"
-	@echo "  --> Checking mounting of dev/proc/sys on build chroot..."
-	@if [ ! -r "$(CHROOT_DIR)/proc/cpuinfo" ]; then\
-		echo "    --> sudo mount -t proc proc $(CHROOT_DIR)/proc;";\
-		sudo mount -t proc proc "$(CHROOT_DIR)/proc";\
-	fi
-	@if [ ! -r "$(CHROOT_DIR)/dev/zero" ]; then\
-		echo "    --> sudo mount --bind /dev $(CHROOT_DIR)/dev;";\
-		sudo mount --bind /dev "$(CHROOT_DIR)/dev";\
-	fi
-	@if [ ! -r "$(CHROOT_DIR)/dev/pts/0" ]; then\
-		echo "    --> sudo mount --bind /dev/pts $(CHROOT_DIR)/dev/pts;";\
-		sudo mount --bind /dev/pts "$(CHROOT_DIR)/dev/pts";\
-	fi
-	@if [ ! -d "$(CHROOT_DIR)/sys/dev" ]; then\
-		echo "    --> sudo mount --bind /sys $(CHROOT_DIR)/sys;";\
-		sudo mount --bind /sys "$(CHROOT_DIR)/sys";\
-	fi
 	@sudo mkdir -p "$(CACHEDIR)/pacman_cache/pkg"
 	@sudo touch "$(CACHEDIR)/pacman_cache/pkg/.mnt"
 	@# qubes pkgs may be from old runs and no longer match the repo hashes
 	@sudo rm "$(CACHEDIR)/pacman_cache/pkg"/qubes-*.pkg.tar.* 2>/dev/null || true
-	@if ! [ -r "$(CHROOT_DIR)/var/cache/pacman/pkg/.mnt" ]; then\
-		echo "    --> sudo mount --bind "$(CACHEDIR)/pacman_cache" "$(CHROOT_DIR)/var/cache/pacman";"; \
-		mkdir -p "$(CHROOT_DIR)/var/cache/pacman";\
-		sudo mount --bind "$(CACHEDIR)/pacman_cache" "$(CHROOT_DIR)/var/cache/pacman";\
-	fi
 	@mkdir -p "$(BUILDER_REPO_DIR)/pkgs"
-	@if ! [ -d "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo/pkgs" ]; then\
-		echo "    --> sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";"; \
-		mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
-		sudo mount --bind "$(BUILDER_REPO_DIR)" "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo";\
-	fi
-	@echo "  --> Synchronize resolv.conf, in case it changed since last run..."
-	@sudo cp /etc/resolv.conf "$(CHROOT_DIR)/etc/resolv.conf"
+	@mkdir -p "$(CHROOT_DIR)/var/cache/pacman"
+	@mkdir -p "$(CHROOT_DIR)/tmp/qubes-packages-mirror-repo"
 
 # Create the build chroot, if it does not already exist
 $(CHROOT_DIR)/home/user/.prepared_base: $(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-builder
@@ -138,7 +111,17 @@ ifndef PACKAGE
 	$(error "PACKAGE need to be set!")
 endif
 	@echo "  --> Building package in $(DIST_SRC)"
-	sudo $(CHROOT_ENV) chroot "$(CHROOT_DIR)" su user -c 'cd "$(DIST_SRC)" && cp $(PACKAGE)/PKGBUILD* ./ && env http_proxy="$(REPO_PROXY)" SOURCE_DATE_EPOCH=$(shell git -C "$$ORIG_SRC" log -1 --pretty=format:%ct) makepkg --syncdeps --noconfirm --skipinteg'
+	sudo systemd-nspawn --directory="$(CHROOT_DIR)" \
+		--bind="$(CACHEDIR)/pacman_cache":"/var/cache/pacman" \
+		--bind="$(BUILDER_REPO_DIR)":"/tmp/qubes-packages-mirror-repo" \
+		--keep-unit \
+        --register=no \
+		--user=user \
+		--setenv=$(CHROOT_ENV) \
+		--setenv=SOURCE_DATE_EPOCH="$(shell git -C "$$ORIG_SRC" log -1 --pretty=format:%ct)" \
+		--setenv=http_proxy="$(REPO_PROXY)" \
+		--chdir="$(DIST_SRC)" \
+		sh -c 'cp $(PACKAGE)/PKGBUILD* ./ && makepkg --syncdeps --noconfirm --skipinteg'
 
 # dist-copy-out - copy compiled package out of chroot env; this target should
 #     move packages to ORIG_SRC (distro-specific subdir) and hardlink them to
