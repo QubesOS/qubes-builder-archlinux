@@ -8,7 +8,7 @@ include:
 
 default:
   tags:
-    - vm-runner
+    - vm
     - long-living-job
 
 after_script:
@@ -29,7 +29,7 @@ tests:vm-archlinux:no-deps:
     - prep:sources
     - chroot:vm-archlinux
   tags:
-    - docker-runner
+    - vm
     - short-living-job
   variables:
     DISTS_VM: archlinux
@@ -44,7 +44,7 @@ tests:vm-archlinux:with-qubes-deps:
     - prep:sources
     - chroot:vm-archlinux
   tags:
-    - docker-runner
+    - vm
     - short-living-job
   variables:
     DISTS_VM: archlinux
