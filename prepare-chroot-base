@@ -5,17 +5,18 @@
 echo "--> Archlinux prepare-chroot-base"
 
 INSTALLDIR="$1"
-DISTRO="$2"  # aka elsewhere as $DIST
+DISTRO="$2" # aka elsewhere as $DIST
 
 BOOTSTRAP_DIR="${CACHEDIR}/bootstrap"
 DEFAULT_ARCHLINUX_MIRROR="\
-http://mirror.rackspace.com\
-,http://mirrors.evowise.com\
-,https://mirror.rackspace.com\
+https://mirror.rackspace.com/archlinux\
+,https://arch.mirror.constant.com\
+,https://mirror.f4st.host/archlinux\
+,https://mirrors.edge.kernel.org/archlinux\
 "
 ARCHLINUX_MIRROR="${ARCHLINUX_MIRROR:-$DEFAULT_ARCHLINUX_MIRROR}"
 IFS="," read -r -a ARCHLINUX_MIRROR \
-  <<< $ARCHLINUX_MIRROR
+    <<<$ARCHLINUX_MIRROR
 
 PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
 export PACMAN_CACHE_DIR
@@ -49,14 +50,11 @@ fi
 echo "  --> Binding INSTALLDIR '${INSTALLDIR}' to bootstrap environment..."
 mount --bind "$INSTALLDIR" "${BOOTSTRAP_DIR}/mnt"
 
-# TODO: This doesn't seem super elegant
-echo "  --> Setting pacman mirrorlist as '${ARCHLINUX_MIRROR[@]}'..."
-ARCHLINUX_MIRRORLIST=$(cat ${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist.dist)
-for MIRROR_ENTRY in "${ARCHLINUX_MIRROR[@]}"
-do
-  ARCHLINUX_MIRRORLIST=$(sed "s|#Server = ${MIRROR_ENTRY}/|Server = ${MIRROR_ENTRY}/|" <<< $ARCHLINUX_MIRRORLIST)
-done
-echo "$ARCHLINUX_MIRRORLIST" > "${CACHEDIR}/bootstrap/etc/pacman.d/mirrorlist"
+echo -e "  --> Setting pacman mirrorlist as:\n$(echo ${ARCHLINUX_MIRROR[@]} | tr ' ' '\n')\n"
+for MIRROR_ENTRY in "${ARCHLINUX_MIRROR[@]}"; do
+    echo "Server = $MIRROR_ENTRY/\$repo/os/\$arch"
+done >"${BOOTSTRAP_DIR}/etc/pacman.d/mirrorlist"
+
 cp /etc/resolv.conf "${BOOTSTRAP_DIR}/etc/"
 
 echo "  --> Initializing pacman keychain..."
