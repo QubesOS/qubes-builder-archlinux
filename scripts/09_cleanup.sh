@@ -32,6 +32,10 @@ unset PACMAN_CACHE_DIR
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
     "pacman --noconfirm -Scc"
 
+# Make Qubes repositories available
+mv "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-4.0.conf.disabled" "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-4.0.conf"
+sed -i s/^#Server/Server/ "${INSTALLDIR}/etc/pacman.d/99-qubes-repository-4.0.conf"
+
 echo " --> Cleaning /etc/resolv.conf"
 rm -f "${INSTALLDIR}/etc/resolv.conf"
 cat > "${INSTALLDIR}/etc/resolv.conf" << EOF
