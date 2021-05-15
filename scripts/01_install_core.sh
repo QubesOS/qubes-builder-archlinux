@@ -4,7 +4,6 @@
 echo "--> Archlinux 01_install_core.sh"
 
 ARCHLINUX_PLUGIN_DIR="${ARCHLINUX_PLUGIN_DIR:-"${SCRIPTSDIR}/.."}"
-
 set -e
 [ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 
@@ -12,11 +11,11 @@ set -e
 # scripts/arch-chroot-lite for details
 unset SKIP_VOLATILE_SECRET_KEY_DIR
 
+"${ARCHLINUX_PLUGIN_DIR}/prepare-chroot-base" "$INSTALLDIR" "$DIST"
+
 # Now there is an official Qubes repository install the Qubes key
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --add - < \
     "${ARCHLINUX_PLUGIN_DIR}/keys/qubes-repo-archlinux-key.asc"
-key_fpr=$(gpg --with-colons --show-key "${ARCHLINUX_PLUGIN_DIR}/keys/qubes-repo-archlinux-key.asc"|\
+key_fpr=$(gpg --with-colons --show-key "${ARCHLINUX_PLUGIN_DIR}/keys/qubes-repo-archlinux-key.asc" |\
             grep ^fpr: | cut -d : -f 10)
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --lsign "$key_fpr"
-
-"${ARCHLINUX_PLUGIN_DIR}/prepare-chroot-base" "$INSTALLDIR" "$DIST"
