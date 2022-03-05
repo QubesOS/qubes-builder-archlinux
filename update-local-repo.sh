@@ -27,7 +27,7 @@ set -e
 
 # Remove local qubes packages signatures because pacman will only trust these
 # local packages if no signature is provided
-chroot_cmd --user=user /bin/sh -c 'if [ -n "$(ls *.sig)" ] ; then rm *.sig ; fi'
+chroot_cmd --user=user /bin/sh -c 'if [ -n "$(ls pkgs/*.sig)" ] ; then rm pkgs/*.sig ; fi'
 
 # Generate custom repository metadata based on packages that are available
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
