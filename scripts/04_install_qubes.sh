@@ -33,16 +33,19 @@ su -c 'echo "SigLevel = Never " >> $INSTALLDIR/etc/pacman.conf'
 # shellcheck disable=SC2016
 su -c 'echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " >> $INSTALLDIR/etc/pacman.conf' 
 
+run_pacman () {
+    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
+        'proxy=$1; shift; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
+}
+
 echo "  --> Synchronize resolv.conf..."
-cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
+cp -- /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
 
 echo "  --> Updating pacman sources..."
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "until http_proxy='${REPO_PROXY}' pacman -Syu; do sleep 1; done"
+run_pacman -Syu
 
 echo "  --> Checking available qubes packages (for debugging only)..."
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "until http_proxy='${REPO_PROXY}' pacman -Ss qubes; do sleep 1; done"
+run_pacman -Ss qubes
 
 if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     # we don't check specific value here, assume correct branch of
@@ -61,17 +64,14 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
         fi
     fi
     echo "  --> Updating pacman sources..."
-    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-        "until http_proxy='${REPO_PROXY}' pacman -Syu; do sleep 1; done"
+    run_pacman -Syu
 fi
 
 echo "  --> Installing mandatory qubes packages..."
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "until http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-dependencies; do sleep 1; done"
+run_pacman -S --noconfirm qubes-vm-dependencies
 
 echo "  --> Installing recommended qubes apps"
-"${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    "until http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-recommended; do sleep 1; done"
+run_pacman -S --noconfirm qubes-vm-recommended
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALLDIR}/etc/fstab" <<EOF
