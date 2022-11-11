@@ -1,6 +1,7 @@
 #! /bin/bash --
 
 set -euo pipefail
+[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 echo "--> Archlinux 00_prepare.sh"
 
 if [[ -n "${REPO_PROXY+x}" ]]; then
@@ -12,7 +13,6 @@ BOOTSTRAP_TARBALL=$(wget -qO- "$ARCHLINUX_SRC_PREFIX"/iso/latest/sha256sums.txt 
 
 BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/latest/${BOOTSTRAP_TARBALL}"
 
-[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 
 mkdir -p "${CACHEDIR}/pacman_cache"
 
