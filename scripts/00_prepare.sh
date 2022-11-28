@@ -1,6 +1,7 @@
 #! /bin/bash --
 
 set -euo pipefail
+[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 echo "--> Archlinux 00_prepare.sh"
 
 if [[ -n "${REPO_PROXY+x}" ]]; then
@@ -8,11 +9,10 @@ if [[ -n "${REPO_PROXY+x}" ]]; then
 fi
 ARCHLINUX_PLUGIN_DIR="${ARCHLINUX_PLUGIN_DIR:-"${SCRIPTSDIR}/.."}"
 ARCHLINUX_SRC_PREFIX="${ARCHLINUX_SRC_PREFIX:-https://mirrors.edge.kernel.org/archlinux}"
-BOOTSTRAP_TARBALL=$(wget -qO- "$ARCHLINUX_SRC_PREFIX"/iso/latest/sha256sums.txt | grep -o "archlinux-bootstrap-[0-9.]*-x86_64.tar.gz")
+BOOTSTRAP_TARBALL=$(wget -O- "$ARCHLINUX_SRC_PREFIX"/iso/latest/sha256sums.txt | grep -o "archlinux-bootstrap-[0-9.]*-x86_64.tar.gz")
 
 BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/latest/${BOOTSTRAP_TARBALL}"
 
-[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
 
 mkdir -p "${CACHEDIR}/pacman_cache"
 
