@@ -22,7 +22,7 @@ echo "  --> Updating Qubes custom repository..."
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
 # shellcheck disable=SC2016
 "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-    'cd /tmp/qubes-packages-mirror-repo; for pkg in `ls -v pkgs/*.pkg.tar.zst`; do repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
+    'cd /tmp/qubes-packages-mirror-repo; repo-add pkgs/qubes.db.tar.gz; for pkg in `ls -v pkgs/*.pkg.tar.zst`; do [ -f "$pkg" ] && repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
