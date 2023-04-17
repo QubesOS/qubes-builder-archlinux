@@ -113,13 +113,13 @@ endif
 		--bind="$(CACHEDIR)/pacman_cache":"/var/cache/pacman" \
 		--bind="$(BUILDER_REPO_DIR)":"/tmp/qubes-packages-mirror-repo" \
 		--keep-unit \
-        --register=no \
+		--register=no \
 		--user=user \
 		--setenv=$(CHROOT_ENV) \
 		--setenv=SOURCE_DATE_EPOCH="$(shell git -C "$$ORIG_SRC" log -1 --pretty=format:%ct)" \
 		--setenv=http_proxy="$(REPO_PROXY)" \
 		--chdir="$(DIST_SRC)" \
-		sh -c 'cp $(PACKAGE)/PKGBUILD* ./ && makepkg --syncdeps --noconfirm --skipinteg'
+		sh -c 'if ! [ -e $(PACKAGE)/PKGBUILD.in ]; then cp $(PACKAGE)/PKGBUILD* ./; fi && makepkg --syncdeps --noconfirm --skipinteg'
 
 # dist-copy-out - copy compiled package out of chroot env; this target should
 #     move packages to ORIG_SRC (distro-specific subdir) and hardlink them to
