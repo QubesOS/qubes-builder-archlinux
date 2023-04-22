@@ -1,13 +1,17 @@
-#!/bin/sh
+#!/bin/bash
 # vim: set ts=4 sw=4 sts=4 et :
 ### prepare-chroot-base : Create a (any) chroot instance of Archlinux
-### May be called from ./scripts/01_install_core.sh or ./prepare-chroot-archlinux
+### May be called from ./template_archlinux/01_install_core.sh or ./prepare-chroot-archlinux
 echo "--> Archlinux prepare-chroot-base"
 
-INSTALLDIR="$1"
-DISTRO="$2" # aka elsewhere as $DIST
+set -e
+if [ "$VERBOSE" -ge 2 ] || [ "$DEBUG" -gt 0 ]; then
+    set -x
+fi
 
-BOOTSTRAP_DIR="${CACHEDIR}/bootstrap"
+INSTALL_DIR="$1"
+
+BOOTSTRAP_DIR="${CACHE_DIR}/bootstrap"
 DEFAULT_ARCHLINUX_MIRROR="\
 https://mirror.rackspace.com/archlinux\
 ,https://arch.mirror.constant.com\
@@ -15,56 +19,51 @@ https://mirror.rackspace.com/archlinux\
 ,https://mirrors.edge.kernel.org/archlinux\
 "
 ARCHLINUX_MIRROR="${ARCHLINUX_MIRROR:-$DEFAULT_ARCHLINUX_MIRROR}"
-IFS="," read -r -a ARCHLINUX_MIRROR \
-    <<<$ARCHLINUX_MIRROR
+IFS="," read -r -a ARCHLINUX_MIRROR <<< "$ARCHLINUX_MIRROR"
 
-PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
+PACMAN_CACHE_DIR="${CACHE_DIR}/pacman_cache"
 export PACMAN_CACHE_DIR
-
-set -e
-if [ "$VERBOSE" -ge 2 ] || [ "$DEBUG" -gt 0 ]; then
-    set -x
-fi
 
 exit_prepare() {
     local exit_code=$?
-    echo "  --> Unbinding INSTALLDIR..."
-    umount ${BOOTSTRAP_DIR}/mnt || true
+    echo "  --> Unbinding INSTALL_DIR..."
+    umount "${BOOTSTRAP_DIR}/mnt" || true
     exit $exit_code
 }
 
 trap 'exit_prepare' 0 1 2 3 6 15
 
-if ! [ -f "${BOOTSTRAP_DIR}/.extracted" -a -d "${CACHEDIR}/pacman_cache" ]; then
+if ! { [ -f "${BOOTSTRAP_DIR}/.extracted" ] && [ -d "${CACHE_DIR}/pacman_cache" ] ;}; then
     # XXX: Potential infinite loop in certain error conditions?
     echo "  --> Bootstrap chroot environment may not exist, calling 00_prepare.sh..."
-    "${SCRIPTSDIR}/00_prepare.sh"
+    "${TEMPLATE_CONTENT_DIR}/00_prepare.sh"
 fi
 
 # XXX: Also run if .extracted is newer than .prepared_base ??
-if [ -f "${INSTALLDIR}/.prepared_base" ]; then
-    echo "  --> NB: INSTALLDIR '${INSTALLDIR}' already appears to have an environment; will leave as-is!"
+if [ -f "${INSTALL_DIR}/.prepared_base" ]; then
+    echo "  --> NB: INSTALL_DIR '${INSTALL_DIR}' already appears to have an environment; will leave as-is!"
     exit 0
 fi
 
-echo "  --> Binding INSTALLDIR '${INSTALLDIR}' to bootstrap environment..."
-mount --bind "$INSTALLDIR" "${BOOTSTRAP_DIR}/mnt"
+echo "  --> Binding INSTALL_DIR '${INSTALL_DIR}' to bootstrap environment..."
+mount --bind "$INSTALL_DIR" "${BOOTSTRAP_DIR}/mnt"
 
-echo -e "  --> Setting pacman mirrorlist as:\n$(echo ${ARCHLINUX_MIRROR[@]} | tr ' ' '\n')\n"
+echo -e "  --> Setting pacman mirrorlist as:\n$(echo "${ARCHLINUX_MIRROR[@]}" | tr ' ' '\n')\n"
 for MIRROR_ENTRY in "${ARCHLINUX_MIRROR[@]}"; do
     echo "Server = $MIRROR_ENTRY/\$repo/os/\$arch"
-done >"${BOOTSTRAP_DIR}/etc/pacman.d/mirrorlist"
+done > "${BOOTSTRAP_DIR}/etc/pacman.d/mirrorlist"
 
 cp /etc/resolv.conf "${BOOTSTRAP_DIR}/etc/"
 
 echo "  --> Initializing pacman keychain..."
-"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
+"${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
     "pacman-key --init && pacman-key --populate"
 
 echo "  --> Installing core pacman packages..."
 export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
-"${SCRIPTSDIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
+# shellcheck disable=SC2016
+"${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
     'for i in 1 2 3 4 5; do ALL_PROXY=$1 http_proxy=$1 https_proxy=$1 pacstrap /mnt base && exit 0; done' sh "$REPO_PROXY"
 unset PACMAN_CACHE_MOUNT_DIR
 
-touch "${INSTALLDIR}/.prepared_base"
+touch "${INSTALL_DIR}/.prepared_base"

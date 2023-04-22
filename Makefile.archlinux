@@ -85,7 +85,7 @@ dist-prepare-chroot: $(CHROOT_DIR)/home/user/.prepared_base
 # Create the build chroot, if it does not already exist
 $(CHROOT_DIR)/home/user/.prepared_base: $(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-builder
 	@echo "--> Archlinux preparing build chroot environment"
-	@sudo -E "$(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-builder" "$(CHROOT_DIR)" $(DIST) || exit 1
+	@sudo -E "$(ARCHLINUX_PLUGIN_DIR)/prepare-chroot-builder" "$(CHROOT_DIR)" "$(CACHEDIR)" || exit 1
 	@touch "$(CHROOT_DIR)/home/user/.prepared_base"
 
 # dist-prep - some preparation of sources (if needed)

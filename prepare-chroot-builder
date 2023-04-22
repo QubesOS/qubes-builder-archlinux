@@ -5,91 +5,96 @@
 ### (in which to build Qubes packages)
 echo "--> Archlinux prepare-chroot-builder"
 
-PLUGIN_DIR="$(dirname $0)"
-INSTALLDIR="$1"
-DISTRO="$2"
+set -eu
+if [ "${VERBOSE:-0}" -ge 2 ] || [ "${DEBUG:-0}" -eq 1 ]; then
+    set -x
+fi
 
-SCRIPTSDIR=${ARCHLINUX_PLUGIN_DIR}scripts
-export INSTALLDIR SCRIPTSDIR
+INSTALL_DIR="$1"
+CACHE_DIR="$2"
 
-PACMAN_CACHE_DIR="${CACHEDIR}/pacman_cache"
-export PACMAN_CACHE_DIR
+PACMAN_CACHE_DIR="${CACHE_DIR}/pacman_cache"
+export CACHE_DIR PACMAN_CACHE_DIR
 
 # do not make volatile private key dir for the package builds themselves
-# this is interpreted by scripts/arch-chroot-lite
+# this is interpreted by template_archlinux/arch-chroot-lite
 SKIP_VOLATILE_SECRET_KEY_DIR=true
 export SKIP_VOLATILE_SECRET_KEY_DIR
 
-set -e
-[ "$VERBOSE" -ge 1 -o "$DEBUG" -gt 0 ] && echo "  --> INSTALLDIR: '$INSTALLDIR'"
-[ "$VERBOSE" -ge 2 -o "$DEBUG" -gt 0 ] && set -x
+# Support legacy builder
+if [ -n "${TEMPLATE_SCRIPTS:-}" ]; then
+    TEMPLATE_CONTENT_DIR="${TEMPLATE_SCRIPTS}"
+    export TEMPLATE_CONTENT_DIR
+fi
+if [ -z "${KEYS_DIR:-}" ]; then
+    KEYS_DIR="${TEMPLATE_CONTENT_DIR}/../keys"
+    export KEYS_DIR
+fi
 
 # /home/user will exist if we've completed the build previously
-if ! [ -d "${INSTALLDIR}/home/user" ]; then
-    # It's non-existance means this is likely the initial run, so build it
+if ! [ -d "${INSTALL_DIR}/home/user" ]; then
+    # It's non-existence means this is likely the initial run, so build it
 
-    mkdir -p "$INSTALLDIR"
+    mkdir -p "$INSTALL_DIR"
 
     echo "  --> Installing archlinux build root:"
-    "${PLUGIN_DIR}/prepare-chroot-base" "$INSTALLDIR" "$DISTRO"
+    "${TEMPLATE_CONTENT_DIR}/../prepare-chroot-base" "${INSTALL_DIR}"
 
     echo "  --> Configure system accounts..."
-    [ -n "$SUDO_UID" ] && USER_OPTS="-u ${SUDO_UID}"
-    [ -n "$USER_UID" ] && USER_OPTS="-u ${USER_UID}"
-    if [ -n "$USER_GID" ]; then
-        chroot "$INSTALLDIR" /bin/groupadd -g "$USER_GID" user
-    elif [ -n "$SUDO_GID" ]; then
-        chroot "$INSTALLDIR" /bin/groupadd -g "$SUDO_GID" user
+    [ -n "${SUDO_UID:-}" ] && USER_OPTS="-u ${SUDO_UID}"
+    [ -n "${USER_UID:-}" ] && USER_OPTS="-u ${USER_UID}"
+    if [ -n "${USER_GID:-}" ]; then
+        chroot "$INSTALL_DIR" /bin/groupadd -g "$USER_GID" user
+    elif [ -n "${SUDO_GID:-}" ]; then
+        chroot "$INSTALL_DIR" /bin/groupadd -g "$SUDO_GID" user
     else
-        chroot "$INSTALLDIR" /bin/groupadd user
+        chroot "$INSTALL_DIR" /bin/groupadd user
     fi
-    chroot "$INSTALLDIR" /bin/sh -c \
+    chroot "$INSTALL_DIR" /bin/sh -c \
         "useradd -g user -G wheel $USER_OPTS -m user; su -c 'mkdir qubes-src' - user"
 
     echo "  --> Synchronize resolv.conf..."
-    cp /etc/resolv.conf "${INSTALLDIR}/etc/resolv.conf"
+    cp /etc/resolv.conf "${INSTALL_DIR}/etc/resolv.conf"
 
     # Checking for free disk free space doesn't work in chroots
     echo "  --> Comment out CheckSpace in pacman.conf..."
-    sed 's/^ *CheckSpace/#CheckSpace/g' -i "${INSTALLDIR}/etc/pacman.conf"
+    sed 's/^ *CheckSpace/#CheckSpace/g' -i "${INSTALL_DIR}/etc/pacman.conf"
 
     echo "  --> Installing required makepkg dependencies..."
     pkgs="base-devel binutils fakeroot sudo"
-    "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" /bin/sh -c \
-        "http_proxy='${REPO_PROXY}' pacman -Sy --needed --noconfirm --asdeps $pkgs"
+    "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
+        "http_proxy='${REPO_PROXY:-}' pacman -Sy --needed --noconfirm --asdeps $pkgs"
 
     # makepkg internally calls sudo without '-E', so we need to add an
     # env_keep to honor proxy settings
     echo "  --> Configure sudo..."
-    cat > "${INSTALLDIR}/etc/sudoers.d/qubes-build-user" <<EOF
+    cat > "${INSTALL_DIR}/etc/sudoers.d/qubes-build-user" <<EOF
 Defaults env_keep += "http_proxy https_proxy ftp_proxy"
 %wheel ALL=(ALL) NOPASSWD: ALL
 EOF
 
     # Note: Enable x86 repos
-    tee -a "${INSTALLDIR}/etc/pacman.conf" <<EOF
+    tee -a "${INSTALL_DIR}/etc/pacman.conf" <<EOF
 [multilib]
 SigLevel = PackageRequired
 Include = /etc/pacman.d/mirrorlist
 EOF
 
     # Register custom repository (it will be created later)
-    tee -a "${INSTALLDIR}/etc/pacman.conf" <<EOF
+    tee -a "${INSTALL_DIR}/etc/pacman.conf" <<EOF
 [qubes]
 SigLevel = Optional TrustAll
 Server = file:///tmp/qubes-packages-mirror-repo/pkgs
 EOF
 
-    if [ -n "$USE_QUBES_REPO_VERSION" ]; then
-        cat "${ARCHLINUX_PLUGIN_DIR}/repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALLDIR}/etc/pacman.conf"
-        if [ "0$USE_QUBES_REPO_TESTING" -gt 0 ]; then
-            cat "${ARCHLINUX_PLUGIN_DIR}repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf" \
-                >> "${INSTALLDIR}/etc/pacman.conf"
+    if [ -n "${USE_QUBES_REPO_VERSION}" ]; then
+        cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALL_DIR}/etc/pacman.conf"
+        if [ "0${USE_QUBES_REPO_TESTING:-0}" -gt 0 ]; then
+            cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf" \
+                >> "${INSTALL_DIR}/etc/pacman.conf"
         fi
-        "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --add - < \
-            "${ARCHLINUX_PLUGIN_DIR}keys/qubes-repo-archlinux-key.asc"
-        key_fpr=$(gpg --with-colons --show-key "${ARCHLINUX_PLUGIN_DIR}keys/qubes-repo-archlinux-key.asc" |\
-                grep ^fpr: | cut -d : -f 10)
-        "${SCRIPTSDIR}/arch-chroot-lite" "$INSTALLDIR" pacman-key --lsign "$key_fpr"
+        key_fpr=$(gpg --with-colons --show-key "${KEYS_DIR}/qubes-repo-archlinux-key.asc" | grep ^fpr: | cut -d : -f 10)
+        "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --add - < "${KEYS_DIR}/qubes-repo-archlinux-key.asc"
+        "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
     fi
 fi
