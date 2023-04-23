@@ -82,19 +82,25 @@ chroot_setup() {
     chmod -- 0555 "$1/proc" "$1/sys" &&
     chmod -- 1777 "$1/tmp" &&
 
+    mkdir -p "$1/dev/shm" &&
+    mkdir -p "$1/dev/pts" &&
+    for dev in null zero random urandom; do
+        cp -a "/dev/$dev" "$1/dev/"
+    done &&
+
     setup_volatile_secret_key_dir &&
 
     chroot_add_mount proc "$1/proc" -t proc -o nosuid,noexec,nodev &&
     chroot_add_mount sys "$1/sys" -t sysfs -o nosuid,noexec,nodev,ro &&
     # arch-chroot-lite will never have occasion to use efivars, so don't bother
     # mounting efivarfs here
-    chroot_add_mount udev "$1/dev" -t devtmpfs -o mode=0755,nosuid &&
     chroot_add_mount devpts "$1/dev/pts" -t devpts -o mode=0620,gid=5,nosuid,noexec &&
     chroot_add_mount shm "$1/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev &&
     chroot_add_mount run "$1/run" -t tmpfs -o nosuid,nodev,mode=0755 &&
-    chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid ||
-
+    chroot_add_mount tmp "$1/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid &&
+    ln -nsf ../proc/self/fd "$1/dev/" ||
     exit
+
     if [[ -d "$PACMAN_CACHE_DIR" ]]; then
         PACMAN_CACHE_MOUNT_DIR="${PACMAN_CACHE_MOUNT_DIR:-$1/var/cache/pacman}"
         mkdir -p "$PACMAN_CACHE_MOUNT_DIR"
