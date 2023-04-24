@@ -16,7 +16,9 @@ after_script:
 
 variables:
   COMPONENTS: "meta-packages linux-template-builder"
-  
+  BRANCH_core_vchan_xen: "release4.1"
+  BRANCH_meta_packages: "release4.1"
+
 prep:sources:
   extends: .components_prepare
   variables:
