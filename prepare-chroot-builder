@@ -87,7 +87,7 @@ SigLevel = Optional TrustAll
 Server = file:///tmp/qubes-packages-mirror-repo/pkgs
 EOF
 
-    if [ -n "${USE_QUBES_REPO_VERSION}" ]; then
+    if [ -n "${USE_QUBES_REPO_VERSION:-}" ]; then
         cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALL_DIR}/etc/pacman.conf"
         if [ "0${USE_QUBES_REPO_TESTING:-0}" -gt 0 ]; then
             cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf" \
