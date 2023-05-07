@@ -88,11 +88,11 @@ Server = file:///tmp/qubes-packages-mirror-repo/pkgs
 EOF
 
     if [ -n "${USE_QUBES_REPO_VERSION:-}" ]; then
-        cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALL_DIR}/etc/pacman.conf"
         if [ "0${USE_QUBES_REPO_TESTING:-0}" -gt 0 ]; then
             cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current-testing.conf" \
                 >> "${INSTALL_DIR}/etc/pacman.conf"
         fi
+        cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALL_DIR}/etc/pacman.conf"
         key_fpr=$(gpg --with-colons --show-key "${KEYS_DIR}/qubes-repo-archlinux-key.asc" | grep ^fpr: | cut -d : -f 10)
         "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --add - < "${KEYS_DIR}/qubes-repo-archlinux-key.asc"
         "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
