@@ -92,6 +92,11 @@ run_pacman -S --noconfirm qubes-vm-dependencies
 echo "  --> Installing recommended qubes apps"
 run_pacman -S --noconfirm qubes-vm-recommended
 
+if [ -z "$USE_QUBES_REPO_VERSION" ]; then
+    echo "  --> Installing repository qubes package..."
+    run_pacman -S --noconfirm qubes-vm-repo
+fi
+
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALL_DIR}/etc/fstab" <<EOF
 #
