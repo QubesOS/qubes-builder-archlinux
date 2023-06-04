@@ -54,7 +54,7 @@ echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " | sudo tee -a "$INS
 
 run_pacman () {
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-        'proxy=$1; shift; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
+        'proxy=$1; shift; trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
 }
 
 echo "  --> Synchronize resolv.conf..."
