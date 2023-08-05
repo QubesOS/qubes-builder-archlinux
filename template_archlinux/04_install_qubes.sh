@@ -24,16 +24,11 @@ fi
 export PACMAN_CACHE_DIR PACMAN_CUSTOM_REPO_DIR "ALL_PROXY=$REPO_PROXY"
 
 echo "  --> Enabling x86 repos..."
-su -c "echo '[multilib]' >> $INSTALL_DIR/etc/pacman.conf"
-su -c "echo 'SigLevel = PackageRequired' >> $INSTALL_DIR/etc/pacman.conf"
-su -c "echo 'Include = /etc/pacman.d/mirrorlist' >> $INSTALL_DIR/etc/pacman.conf"
+sed -i '/\[multilib]/,+1 s/^#//' "${INSTALL_DIR}/etc/pacman.conf"
 sudo sed -Ei 's,^#(Server *= *https://mirrors\.kernel\.org/),\1,' "$INSTALL_DIR/etc/pacman.d/mirrorlist"
 
 echo "  --> Updating Qubes custom repository..."
 # Repo Add need packages to be added in the right version number order as it only keeps the last entered package version
-# shellcheck disable=SC2016
-
-
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
     'mkdir -p /tmp/qubes-packages-mirror-repo/pkgs'
 
@@ -42,17 +37,21 @@ if [ "0${IS_LEGACY_BUILDER}" -eq 0 ]; then
         "cd /tmp/qubes-packages-mirror-repo && find . -name '*.pkg.tar.*' -print0 | xargs -0 -I {} mv {} pkgs/"
 fi
 
+# shellcheck disable=SC2016
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
     'cd /tmp/qubes-packages-mirror-repo && repo-add pkgs/qubes.db.tar.gz; for pkg in `ls -v pkgs/*.pkg.tar.zst`; do [ -f "$pkg" ] && repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
-echo "[qubes] " | sudo tee -a "$INSTALL_DIR/etc/pacman.conf"
-echo "SigLevel = Never " | sudo tee -a "$INSTALL_DIR/etc/pacman.conf"
-echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " | sudo tee -a "$INSTALL_DIR/etc/pacman.conf"
+cat >> "$INSTALL_DIR/etc/pacman.conf" <<EOF
+[qubes]
+SigLevel = Never
+Server = file:///tmp/qubes-packages-mirror-repo/pkgs
+EOF
 
 run_pacman () {
+    # shellcheck disable=SC2016
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
         'proxy=$1; shift; trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
 }
