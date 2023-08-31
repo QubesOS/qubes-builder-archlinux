@@ -57,6 +57,11 @@ run_pacman () {
         'proxy=$1; shift; trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
 }
 
+run_pacman_single () {
+    "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
+        'proxy=$1; shift; trap break SIGINT SIGTERM; ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@"' sh "$REPO_PROXY" pacman "$@"
+}
+
 echo "  --> Synchronize resolv.conf..."
 cp -- /etc/resolv.conf "${INSTALL_DIR}/etc/resolv.conf"
 
@@ -64,7 +69,7 @@ echo "  --> Updating pacman sources..."
 run_pacman -Syu
 
 echo "  --> Checking available qubes packages (for debugging only)..."
-run_pacman -Ss qubes
+run_pacman_single -Ss qubes || :
 
 if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     # we don't check specific value here, assume correct branch of
