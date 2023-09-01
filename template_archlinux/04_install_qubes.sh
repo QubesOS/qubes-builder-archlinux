@@ -67,7 +67,7 @@ echo "  --> Synchronize resolv.conf..."
 cp -- /etc/resolv.conf "${INSTALL_DIR}/etc/resolv.conf"
 
 echo "  --> Updating pacman sources..."
-run_pacman -Syu
+run_pacman -Syu --noconfirm
 
 echo "  --> Checking available qubes packages (for debugging only)..."
 run_pacman_single -Ss qubes || :
@@ -89,7 +89,7 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     key_fpr=$(gpg --with-colons --show-key "${key_path}"| grep ^fpr: | cut -d : -f 10)
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
     echo "  --> Updating pacman sources..."
-    run_pacman -Syu
+    run_pacman -Syu --noconfirm
 fi
 echo "### qubes-builder-end" >> "$INSTALL_DIR/etc/pacman.conf"
 
