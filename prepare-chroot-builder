@@ -93,8 +93,8 @@ EOF
                 >> "${INSTALL_DIR}/etc/pacman.conf"
         fi
         cat "${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}-current.conf" >> "${INSTALL_DIR}/etc/pacman.conf"
-        key_fpr=$(gpg --with-colons --show-key "${KEYS_DIR}/qubes-repo-archlinux-key.asc" | grep ^fpr: | cut -d : -f 10)
-        "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --add - < "${KEYS_DIR}/qubes-repo-archlinux-key.asc"
+        key_fpr=$(gpg --with-colons --show-key "${KEYS_DIR}/qubes-repo-archlinux-key-${USE_QUBES_REPO_VERSION}.asc" | grep ^fpr: | cut -d : -f 10)
+        "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --add - < "${KEYS_DIR}/qubes-repo-archlinux-key-${USE_QUBES_REPO_VERSION}.asc"
         "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
     fi
 fi
