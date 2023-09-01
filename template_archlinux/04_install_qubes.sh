@@ -48,6 +48,7 @@ fi
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
 echo "  --> Registering Qubes custom repository..."
+echo "### qubes-builder-begin" >> "$INSTALL_DIR/etc/pacman.conf"
 echo "[qubes] " | sudo tee -a "$INSTALL_DIR/etc/pacman.conf"
 echo "SigLevel = Never " | sudo tee -a "$INSTALL_DIR/etc/pacman.conf"
 echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " | sudo tee -a "$INSTALL_DIR/etc/pacman.conf"
@@ -75,21 +76,22 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     # we don't check specific value here, assume correct branch of
     # meta-packages component
     echo "  --> Installing repository qubes package..."
-    "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-        "http_proxy='${REPO_PROXY}' pacman -S --noconfirm qubes-vm-repo"
+    repos_basename="${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}"
+    key_path="${TEMPLATE_CONTENT_DIR}/../keys/qubes-repo-archlinux-key-${USE_QUBES_REPO_VERSION}.asc"
+    cat "${repos_basename}-current.conf" \
+        >> "$INSTALL_DIR/etc/pacman.conf"
     if [ "0$USE_QUBES_REPO_TESTING" -gt 0 ]; then
         echo "  --> Enabling current-testing repository..."
-        ln -s "90-qubes-${USE_QUBES_REPO_VERSION}-current-testing.conf.disabled" \
-            "$INSTALL_DIR/etc/pacman.d/90-qubes-${USE_QUBES_REPO_VERSION}-current-testing.conf"
-        # abort if the file doesn't exist
-        if ! [ -f "$INSTALL_DIR/etc/pacman.d/90-qubes-${USE_QUBES_REPO_VERSION}-current-testing.conf" ]; then
-            ls -l "$INSTALL_DIR/etc/pacman.d/"
-            exit 1
-        fi
+        cat "${repos_basename}-current-testing.conf" \
+            >> "$INSTALL_DIR/etc/pacman.conf"
     fi
+    "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --add /proc/self/fd/0 < "${key_path}"
+    key_fpr=$(gpg --with-colons --show-key "${key_path}"| grep ^fpr: | cut -d : -f 10)
+    "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
     echo "  --> Updating pacman sources..."
     run_pacman -Syu
 fi
+echo "### qubes-builder-end" >> "$INSTALL_DIR/etc/pacman.conf"
 
 echo "  --> Installing mandatory qubes packages..."
 run_pacman -S --noconfirm qubes-vm-dependencies
@@ -97,10 +99,8 @@ run_pacman -S --noconfirm qubes-vm-dependencies
 echo "  --> Installing recommended qubes apps"
 run_pacman -S --noconfirm qubes-vm-recommended
 
-if [ -z "$USE_QUBES_REPO_VERSION" ]; then
-    echo "  --> Installing repository qubes package..."
-    run_pacman -S --noconfirm qubes-vm-repo
-fi
+echo "  --> Installing repository qubes package..."
+run_pacman -S --noconfirm qubes-vm-repo
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALL_DIR}/etc/fstab" <<EOF
@@ -138,4 +138,4 @@ mkdir -p "${INSTALL_DIR}/lib/modules"
 touch "${INSTALL_DIR}/lib/modules/QUBES_NODELETE"
 
 # Remove qubes local repository definition
-sed '/\[qubes]/,+2 d' -i "${INSTALL_DIR}/etc/pacman.conf"
+sed '/### qubes-builder-begin/,/### qubes-builder-end/d' -i "${INSTALL_DIR}/etc/pacman.conf"
