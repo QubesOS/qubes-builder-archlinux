@@ -78,13 +78,13 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     echo "  --> Installing repository qubes package..."
     repos_basename="${TEMPLATE_CONTENT_DIR}/../repos/archlinux-qubes-repo-${USE_QUBES_REPO_VERSION}"
     key_path="${TEMPLATE_CONTENT_DIR}/../keys/qubes-repo-archlinux-key-${USE_QUBES_REPO_VERSION}.asc"
-    cat "${repos_basename}-current.conf" \
-        >> "$INSTALL_DIR/etc/pacman.conf"
     if [ "0$USE_QUBES_REPO_TESTING" -gt 0 ]; then
         echo "  --> Enabling current-testing repository..."
         cat "${repos_basename}-current-testing.conf" \
             >> "$INSTALL_DIR/etc/pacman.conf"
     fi
+    cat "${repos_basename}-current.conf" \
+        >> "$INSTALL_DIR/etc/pacman.conf"
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --add /proc/self/fd/0 < "${key_path}"
     key_fpr=$(gpg --with-colons --show-key "${key_path}"| grep ^fpr: | cut -d : -f 10)
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
