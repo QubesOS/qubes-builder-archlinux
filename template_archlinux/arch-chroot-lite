@@ -85,7 +85,7 @@ chroot_setup() {
     mkdir -p "$1/dev/shm" &&
     mkdir -p "$1/dev/pts" &&
     for dev in null zero random urandom; do
-        cp -a "/dev/$dev" "$1/dev/"
+        [ -c "$1/dev/$dev" ] || cp -a "/dev/$dev" "$1/dev/"
     done &&
 
     setup_volatile_secret_key_dir &&
