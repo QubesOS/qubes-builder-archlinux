@@ -17,14 +17,6 @@ else
     echo "  --> NB: No packages to clean up"
 fi
 
-echo "  --> Removing video plugins..."
-videopkgs="$("${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c 'pacman -Qs -q xf86-video')"
-echo $videopkgs | "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c 'pacman --noconfirm -Rsc -'
-
-echo "  --> Removing other font packages..."
-"${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-    "pacman --noconfirm -Rsc xorg-fonts-100dpi xorg-fonts-75dpi"
-
 # TODO: Be more deliberate here; is the umount necessary?
 # Moreover, given where this script is called, should we be bothering
 # arch-chroot-lite?
