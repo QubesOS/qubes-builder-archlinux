@@ -37,13 +37,20 @@ echo "  --> Updating Qubes custom repository..."
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
     'mkdir -p /tmp/qubes-packages-mirror-repo/pkgs'
 
+PKGS_DIR="$PACMAN_CUSTOM_REPO_DIR/pkgs"
+# repo-add cannot create empty db anymore, do it manually
+bsdtar -cf - -T /dev/null | gzip > "${PKGS_DIR}/qubes.db.tar.gz"
+ln -s qubes.db.tar.gz "${PKGS_DIR}/qubes.db"
+bsdtar -cf - -T /dev/null | gzip > "${PKGS_DIR}/qubes.files.tar.gz"
+ln -s qubes.files.tar.gz "${PKGS_DIR}/qubes.files"
+
 if [ "0${IS_LEGACY_BUILDER}" -eq 0 ]; then
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
         "cd /tmp/qubes-packages-mirror-repo && find . -name '*.pkg.tar.*' -print0 | xargs -0 -I {} mv {} pkgs/"
 fi
 
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-    'cd /tmp/qubes-packages-mirror-repo && repo-add pkgs/qubes.db.tar.gz; for pkg in `ls -v pkgs/*.pkg.tar.zst`; do [ -f "$pkg" ] && repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
+    'cd /tmp/qubes-packages-mirror-repo && for pkg in `ls -v pkgs/*.pkg.tar.zst`; do [ -f "$pkg" ] && repo-add pkgs/qubes.db.tar.gz "$pkg"; done;'
 
 chown -R --reference="$PACMAN_CUSTOM_REPO_DIR" "$PACMAN_CUSTOM_REPO_DIR"
 
