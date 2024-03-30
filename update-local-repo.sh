@@ -20,7 +20,11 @@ chroot_cmd() {
 mkdir -p "$PKGS_DIR"
 if [ ! -f "${PKGS_DIR}/qubes.db" ]; then
     echo "  -> Repo '${PKGS_DIR}' appears empty; initialising..."
-    chroot_cmd --user=user repo-add pkgs/qubes.db.tar.gz
+    # repo-add cannot create empty db anymore, do it manually
+    bsdtar -cf - -T /dev/null | gzip > "${PKGS_DIR}/qubes.db.tar.gz"
+    ln -s qubes.db.tar.gz "${PKGS_DIR}/qubes.db"
+    bsdtar -cf - -T /dev/null | gzip > "${PKGS_DIR}/qubes.files.tar.gz"
+    ln -s qubes.files.tar.gz "${PKGS_DIR}/qubes.files"
 fi
 
 set -e
