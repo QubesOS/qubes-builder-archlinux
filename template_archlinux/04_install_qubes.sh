@@ -74,7 +74,7 @@ echo "  --> Synchronize resolv.conf..."
 cp -- /etc/resolv.conf "${INSTALL_DIR}/etc/resolv.conf"
 
 echo "  --> Updating pacman sources..."
-run_pacman -Syu --noconfirm
+run_pacman -Syu --noconfirm --noprogressbar
 
 echo "  --> Checking available qubes packages (for debugging only)..."
 run_pacman_single -Ss qubes || :
@@ -96,18 +96,18 @@ if [ -n "$USE_QUBES_REPO_VERSION" ]; then
     key_fpr=$(gpg --with-colons --show-key "${key_path}"| grep ^fpr: | cut -d : -f 10)
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" pacman-key --lsign "$key_fpr"
     echo "  --> Updating pacman sources..."
-    run_pacman -Syu --noconfirm
+    run_pacman -Syu --noconfirm --noprogressbar
 fi
 echo "### qubes-builder-end" >> "$INSTALL_DIR/etc/pacman.conf"
 
 echo "  --> Installing mandatory qubes packages..."
-run_pacman -S --noconfirm qubes-vm-dependencies
+run_pacman -S --noconfirm --noprogressbar qubes-vm-dependencies
 
 echo "  --> Installing recommended qubes apps"
-run_pacman -S --noconfirm qubes-vm-recommended
+run_pacman -S --noconfirm --noprogressbar qubes-vm-recommended
 
 echo "  --> Installing repository qubes package..."
-run_pacman -S --noconfirm qubes-vm-repo
+run_pacman -S --noconfirm --noprogressbar qubes-vm-repo
 
 echo "  --> Updating template fstab file..."
 cat >> "${INSTALL_DIR}/etc/fstab" <<EOF

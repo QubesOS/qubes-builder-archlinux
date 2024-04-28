@@ -29,9 +29,9 @@ cp /etc/resolv.conf "${INSTALL_DIR}/etc/resolv.conf"
 
 echo "  --> Updating installed packages..."
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -Syu --noconfirm"
+    "http_proxy='${REPO_PROXY}' pacman -Syu --noconfirm --noprogressbar"
 
 echo "  --> Installing archlinux package groups..."
 echo "    --> Selected packages: ${PKGGROUPS}"
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -S --needed --noconfirm ${PKGGROUPS}"
+    "http_proxy='${REPO_PROXY}' pacman -S --needed --noconfirm --noprogressbar ${PKGGROUPS}"
