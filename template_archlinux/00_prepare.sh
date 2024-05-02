@@ -18,7 +18,7 @@ if [[ -n "${REPO_PROXY+x}" ]]; then
     export "https_proxy=$REPO_PROXY" "http_proxy=$REPO_PROXY"
 fi
 ARCHLINUX_SRC_PREFIX="${ARCHLINUX_SRC_PREFIX:-https://mirrors.edge.kernel.org/archlinux}"
-BOOTSTRAP_TARBALL=$(wget -O- "$ARCHLINUX_SRC_PREFIX"/iso/latest/sha256sums.txt | grep -o "archlinux-bootstrap-[0-9.]*-x86_64.tar.gz")
+BOOTSTRAP_TARBALL=$(wget -O- "$ARCHLINUX_SRC_PREFIX"/iso/latest/sha256sums.txt | grep -o "archlinux-bootstrap-[0-9.]*-x86_64\.tar\.[a-z]*" | head -1)
 BOOTSTRAP_URL="${ARCHLINUX_SRC_PREFIX}/iso/latest/${BOOTSTRAP_TARBALL}"
 
 mkdir -p "${CACHE_DIR}/pacman_cache"
@@ -42,7 +42,7 @@ if [ "${CACHE_DIR}/${BOOTSTRAP_TARBALL}" -nt "${CACHE_DIR}/bootstrap/.extracted"
     rm -rf "${CACHE_DIR}/bootstrap/"
     mkdir -p "${CACHE_DIR}/bootstrap"
     # By default will extract to a "root.x86_64" directory; strip that off
-    tar -xzC "${CACHE_DIR}/bootstrap" --strip-components=1 -f "${CACHE_DIR}/${BOOTSTRAP_TARBALL}"
+    tar -xC "${CACHE_DIR}/bootstrap" --strip-components=1 -f "${CACHE_DIR}/${BOOTSTRAP_TARBALL}"
     # Copy the distribution-provided version to be rewritten based on the
     # value of $ARCHLINUX_MIRROR each run (by the Makefile)
     cp -a "${CACHE_DIR}/bootstrap/etc/pacman.d/mirrorlist" "${CACHE_DIR}/bootstrap/etc/pacman.d/mirrorlist.dist"
