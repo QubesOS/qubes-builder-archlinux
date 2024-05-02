@@ -43,8 +43,8 @@ chroot_cmd sed "s/^ *CheckSpace/#CheckSpace/g" -i /etc/pacman.conf
 
 # Update archlinux keyring first so that Archlinux can be updated even after a long time
 chroot_cmd /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -Sy --noconfirm archlinux-keyring"
+    "http_proxy='${REPO_PROXY}' pacman -Sy --noconfirm --noprogressbar archlinux-keyring"
 
 # Now update system
 chroot_cmd /bin/sh -c \
-    "http_proxy='${REPO_PROXY}' pacman -Syu --noconfirm"
+    "http_proxy='${REPO_PROXY}' pacman -Syu --noconfirm --noprogressbar"

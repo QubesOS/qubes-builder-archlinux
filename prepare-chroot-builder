@@ -63,7 +63,7 @@ if ! [ -d "${INSTALL_DIR}/home/user" ]; then
     echo "  --> Installing required makepkg dependencies..."
     pkgs="base-devel binutils fakeroot sudo"
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-        "http_proxy='${REPO_PROXY:-}' pacman -Sy --needed --noconfirm --asdeps $pkgs"
+        "http_proxy='${REPO_PROXY:-}' pacman -Sy --needed --noconfirm --noprogressbar --asdeps $pkgs"
 
     # makepkg internally calls sudo without '-E', so we need to add an
     # env_keep to honor proxy settings
