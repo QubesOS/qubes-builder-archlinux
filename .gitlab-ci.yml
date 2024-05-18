@@ -24,8 +24,8 @@ after_script:
 
 variables:
   COMPONENTS: "meta-packages linux-template-builder"
-  BRANCH_core_vchan_xen: "release4.1"
-  BRANCH_meta_packages: "release4.1"
+  BRANCH_core_vchan_xen: "release4.2"
+  BRANCH_meta_packages: "release4.2"
 
 prep:sources:
   extends: .components_prepare
@@ -58,6 +58,6 @@ tests:vm-archlinux:with-qubes-deps:
     - short-living-job
   variables:
     DISTS_VM: archlinux
-    USE_QUBES_REPO_VERSION: "4.1"
+    USE_QUBES_REPO_VERSION: "4.2"
     USE_QUBES_REPO_TESTING: "1"
     COMPONENTS: core-vchan-xen
