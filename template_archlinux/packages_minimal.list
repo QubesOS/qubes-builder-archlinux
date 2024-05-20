@@ -8,3 +8,4 @@ net-tools
 sudo
 wget
 diffutils
+python-urllib3
