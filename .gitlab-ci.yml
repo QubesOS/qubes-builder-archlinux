@@ -37,9 +37,6 @@ tests:vm-archlinux:no-deps:
   needs:
     - prep:sources
     - chroot:vm-archlinux
-  tags:
-    - vm
-    - short-living-job
   variables:
     DISTS_VM: archlinux
     USE_QUBES_REPO_VERSION: "4.1"
@@ -52,9 +49,6 @@ tests:vm-archlinux:with-qubes-deps:
   needs:
     - prep:sources
     - chroot:vm-archlinux
-  tags:
-    - vm
-    - short-living-job
   variables:
     DISTS_VM: archlinux
     USE_QUBES_REPO_VERSION: "4.2"
