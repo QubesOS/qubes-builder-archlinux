@@ -21,7 +21,7 @@ else
     PACMAN_CUSTOM_REPO_DIR="${PACKAGES_DIR}"
 fi
 
-export PACMAN_CACHE_DIR PACMAN_CUSTOM_REPO_DIR "ALL_PROXY=$REPO_PROXY"
+export PACMAN_CACHE_DIR PACMAN_CUSTOM_REPO_DIR "ALL_PROXY=$REPO_PROXY" NO_PROXY=127.0.0.1
 
 echo "  --> Enabling x86 repos..."
 su -c "echo '[multilib]' >> $INSTALL_DIR/etc/pacman.conf"
@@ -62,12 +62,12 @@ echo "Server = file:///tmp/qubes-packages-mirror-repo/pkgs " | sudo tee -a "$INS
 
 run_pacman () {
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-        'proxy=$1; shift; trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
+        'proxy=$1; shift; trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy NO_PROXY=127.0.0.1 "$@" && exit; done; exit 1' sh "$REPO_PROXY" pacman "$@"
 }
 
 run_pacman_single () {
     "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$INSTALL_DIR" /bin/sh -c \
-        'proxy=$1; shift; trap break SIGINT SIGTERM; ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy "$@"' sh "$REPO_PROXY" pacman "$@"
+        'proxy=$1; shift; trap break SIGINT SIGTERM; ALL_PROXY=$proxy http_proxy=$proxy https_proxy=$proxy NO_PROXY=127.0.0.1 "$@"' sh "$REPO_PROXY" pacman "$@"
 }
 
 echo "  --> Synchronize resolv.conf..."

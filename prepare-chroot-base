@@ -63,7 +63,7 @@ echo "  --> Installing core pacman packages..."
 export PACMAN_CACHE_MOUNT_DIR="${BOOTSTRAP_DIR}/mnt/var/cache/pacman"
 # shellcheck disable=SC2016
 "${TEMPLATE_CONTENT_DIR}/arch-chroot-lite" "$BOOTSTRAP_DIR" /bin/sh -c \
-    'trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$1 http_proxy=$1 https_proxy=$1 pacstrap /mnt base && exit 0; done' sh "$REPO_PROXY"
+    'trap break SIGINT SIGTERM; for i in 1 2 3 4 5; do ALL_PROXY=$1 http_proxy=$1 https_proxy=$1 NO_PROXY=127.0.0.1 pacstrap /mnt base && exit 0; done' sh "$REPO_PROXY"
 unset PACMAN_CACHE_MOUNT_DIR
 
 touch "${INSTALL_DIR}/.prepared_base"
