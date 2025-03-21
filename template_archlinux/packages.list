@@ -2,9 +2,6 @@
 xorg-server
 xterm
 
-# Force pulseaudio over pipewire for now
-pulseaudio
-
 # Basic utils
 ethtool
 net-tools

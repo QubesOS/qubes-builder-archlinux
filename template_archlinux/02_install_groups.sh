@@ -21,6 +21,12 @@ fi
 # Strip comments, then convert newlines to single spaces
 PKGGROUPS="$(sed '/^ *#/d; s/  *#.*//' "${PKGLISTFILE}" | sed ':a;N;$!ba; s/\n/ /g; s/  */ /g')"
 
+if [ "$RELEASE" == "4.2" ]; then
+    # Force pulseaudio over pipewire on 4.2 - otherwise pipewire-pulse gets
+    # installed that later conflicts with pulseaudio
+    PKGGROUPS+=" pulseaudio"
+fi
+
 PACMAN_CACHE_DIR="${CACHE_DIR}/pacman_cache"
 export PACMAN_CACHE_DIR
 
