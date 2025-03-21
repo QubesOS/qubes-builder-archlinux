@@ -1,11 +1,5 @@
 include:
   - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-base.yml'
-  - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-vm-archlinux-chroot.yml'
-  - project: 'QubesOS/qubes-continuous-integration'
-    file: '/r4.1/gitlab-vm-archlinux-build-template.yml'
-  - project: 'QubesOS/qubes-continuous-integration'
     file: '/r4.2/gitlab-base.yml'
   - project: 'QubesOS/qubes-continuous-integration'
     file: '/r4.2/gitlab-vm-archlinux-build-template.yml'
@@ -17,40 +11,3 @@ include:
 default:
   tags:
     - vm
-
-after_script:
-  - ls -l ~/qubes-builder/qubes-src/linux-template-builder/rpm/noarch
-
-variables:
-  COMPONENTS: "meta-packages linux-template-builder"
-  BRANCH_core_vchan_xen: "release4.2"
-  BRANCH_meta_packages: "release4.2"
-
-prep:sources:
-  extends: .components_prepare
-  variables:
-    COMPONENTS: "linux-template-builder core-vchan-xen app-linux-split-gpg meta-packages"
-
-tests:vm-archlinux:no-deps:
-  extends: .components_build
-  stage: tests
-  needs:
-    - prep:sources
-    - chroot:vm-archlinux
-  variables:
-    DISTS_VM: archlinux
-    USE_QUBES_REPO_VERSION: "4.1"
-    USE_QUBES_REPO_TESTING: "1"
-    COMPONENTS: app-linux-split-gpg
-
-tests:vm-archlinux:with-qubes-deps:
-  extends: .components_build
-  stage: tests
-  needs:
-    - prep:sources
-    - chroot:vm-archlinux
-  variables:
-    DISTS_VM: archlinux
-    USE_QUBES_REPO_VERSION: "4.2"
-    USE_QUBES_REPO_TESTING: "1"
-    COMPONENTS: core-vchan-xen
