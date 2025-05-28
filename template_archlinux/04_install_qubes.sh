@@ -109,8 +109,9 @@ run_pacman -S --noconfirm --noprogressbar qubes-vm-recommended
 echo "  --> Installing repository qubes package..."
 run_pacman -S --noconfirm --noprogressbar qubes-vm-repo
 
-echo "  --> Updating template fstab file..."
-cat >> "${INSTALL_DIR}/etc/fstab" <<EOF
+if ! grep -q /dmroot "${INSTALL_DIR}/etc/fstab"; then
+    echo "  --> Updating template fstab file..."
+    cat >> "${INSTALL_DIR}/etc/fstab" <<EOF
 #
 # /etc/fstab: static file system information
 #
@@ -131,6 +132,7 @@ tmpfs                   /dev/shm                                    tmpfs   defa
 tmpfs                   /etc/pacman.d/gnupg/private-keys-v1.d       ramfs   defaults,noexec,nosuid,nodev,mode=600    0 0
 
 EOF
+fi
 
 echo "  --> Configuring system to our preferences..."
 # Name network devices using simple names (ethX)
